@@ -72,37 +72,20 @@ const Login = () => {
         try {
 
             setLoading(true);
-
             setErr("");
-
-            const res = await Apis.post(
-
-                endpoints.login,
-
-                user
-
-            );
-
-            await saveLogin(
-
-                res.data.data.token
-
-            );
+            const res = await Apis.post(endpoints.login, user);
+            await saveLogin(res.data.data.token);
 
         }
 
         catch (ex) {
-
             console.log(ex);
-
             setErr("Email hoặc mật khẩu không đúng");
 
         }
 
         finally {
-
             setLoading(false);
-
         }
 
     }
@@ -112,41 +95,26 @@ const Login = () => {
         try {
 
             setLoading(true);
-
             setErr("");
-
             const res = await Apis.post(
-
                 endpoints.googleLogin,
-
                 {
-
                     token: credentialResponse.credential
-
-                }
-
-            );
+                });
 
             await saveLogin(
-
                 res.data.data.token
-
             );
 
         }
 
         catch (ex) {
-
             console.log(ex);
-
             setErr("Đăng nhập Google thất bại");
-
         }
 
         finally {
-
             setLoading(false);
-
         }
 
     }
@@ -188,22 +156,16 @@ const Login = () => {
                             >
 
                                 <Form.Label>
-
                                     {f.label}
-
                                 </Form.Label>
 
                                 <Form.Control
 
                                     type={f.type}
-
                                     value={user[f.field] || ""}
-
                                     onChange={(e) =>
                                         setUser({
-
                                             ...user,
-
                                             [f.field]: e.target.value
 
                                         })

@@ -1,25 +1,14 @@
 import 'bootstrap/dist/css/bootstrap.min.css'
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import Header from "./components/Header";
-
 import Footer from "./components/Footer";
-
 import Login from "./screens/Auth/Login";
-
 import StudentHome from "./screens/Student/StudentHome";
-
 import EmployerHome from "./screens/Employer/EmployerHome";
-
 import { Container } from "react-bootstrap";
-
 import { useReducer } from "react";
-
 import cookies from "react-cookies";
-
 import { MyUserContext } from "./configs/Contexts";
-
 import MyUserReducer from "./reducers/MyUserReducer";
 import ProtectedRoute from './components/ProtectedRoute';
 import CompanyProfile from "./screens/Employer/CompanyProfile";
@@ -27,15 +16,13 @@ import CompanyEdit from "./screens/Employer/CompanyEdit";
 import EmployerJobs from "./screens/Employer/EmployerJobs";
 import JobDetail from "./screens/Employer/JobDetail";
 import JobForm from "./screens/Employer/JobForm";
+import StudentBookmarks from "./screens/Student/StudentBookmarks";
 
 function App() {
 
   const [user, dispatch] = useReducer(
-
     MyUserReducer,
-
     cookies.load("user") || null
-
   );
 
   return (
@@ -58,11 +45,7 @@ function App() {
 
               element={
 
-                <ProtectedRoute
-
-                  roles={["STUDENT"]}
-
-                >
+                <ProtectedRoute roles={["STUDENT"]}>
 
                   <StudentHome />
 
@@ -73,6 +56,15 @@ function App() {
             />
 
             <Route
+              path="/student/bookmarks"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentBookmarks />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
 
               path="/employer"
 
@@ -80,10 +72,7 @@ function App() {
 
                 <ProtectedRoute
 
-                  roles={["EMPLOYER"]}
-
-                >
-
+                  roles={["EMPLOYER"]}>
                   <EmployerHome />
 
                 </ProtectedRoute>

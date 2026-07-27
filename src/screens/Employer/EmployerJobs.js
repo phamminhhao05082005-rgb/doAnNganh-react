@@ -1,12 +1,7 @@
 import { useEffect, useState } from "react";
 import { authApis, endpoints } from "../../configs/Apis";
 import dayjs from "dayjs";
-import {
-    Button,
-    Card,
-    Spinner,
-    Table
-} from "react-bootstrap";
+import {Button, Card, Spinner, Table} from "react-bootstrap";
 import { Link } from "react-router-dom";
 
 const EmployerJobs = () => {

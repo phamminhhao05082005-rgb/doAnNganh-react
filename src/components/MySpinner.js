@@ -5,9 +5,7 @@ const MySpinner=()=>{
     return(
 
         <div className="text-center">
-
             <Spinner animation="border"/>
-
         </div>
 
     )

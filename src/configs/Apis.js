@@ -31,6 +31,14 @@ export const endpoints = {
 
     skills: "/auth/skills",
 
+    bookmarks: "/auth/student/bookmarks",
+
+    bookmark: (jobId) =>
+        `/auth/student/bookmarks/${jobId}`,
+
+    unBookmark: (jobId) =>
+        `/auth/student/bookmarks/${jobId}`,
+
 };
 
 export const authApis = () => {
@@ -42,11 +50,7 @@ export const authApis = () => {
         baseURL: "http://127.0.0.1:8000/api",
 
         headers: {
-
-            Authorization: token
-                ? `Bearer ${token}`
-                : ""
-
+            Authorization: token ? `Bearer ${token}` : ""
         }
 
     });
@@ -54,7 +58,5 @@ export const authApis = () => {
 }
 
 export default axios.create({
-
     baseURL: "http://127.0.0.1:8000/api"
-
 });

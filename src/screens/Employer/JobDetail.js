@@ -2,14 +2,10 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
 import dayjs from "dayjs";
-import {
-    Card,
-    Spinner,
-    Button,
-    Badge
-} from "react-bootstrap";
+import { Card, Spinner, Button, Badge } from "react-bootstrap";
 import { useContext } from "react";
 import { MyUserContext } from "../../configs/Contexts";
+import { toast } from "react-toastify";
 
 const JobDetail = () => {
 
@@ -28,6 +24,45 @@ const JobDetail = () => {
 
         setJob(res.data.data);
     }
+
+    const toggleBookmark = async () => {
+
+        try {
+
+            if (job.bookmarked) {
+
+                await authApis().delete(
+                    endpoints.unBookmark(job.id)
+                );
+
+                setJob({
+                    ...job,
+                    bookmarked: false
+                });
+
+                toast.success("Đã bỏ lưu việc làm");
+
+            } else {
+
+                await authApis().post(
+                    endpoints.bookmark(job.id)
+                );
+
+                setJob({
+                    ...job,
+                    bookmarked: true
+                });
+
+                alert("Đã lưu việc làm");
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Không thể lưu việc làm");
+        }
+    };
 
     useEffect(() => {
 
@@ -237,9 +272,28 @@ const JobDetail = () => {
                     )}
 
                     {user?.role === "STUDENT" && (
-                        <Button variant="success">
-                            Ứng tuyển
-                        </Button>
+
+                        <>
+                            <Button variant="success">
+                                Ứng tuyển
+                            </Button>
+
+                            <Button
+                                variant={
+                                    job.bookmarked
+                                        ? "danger"
+                                        : "outline-danger"
+                                }
+                                onClick={toggleBookmark}
+                            >
+                                {
+                                    job.bookmarked
+                                        ? "Bỏ lưu"
+                                        : "Lưu việc làm"
+                                }
+                            </Button>
+                        </>
+
                     )}
 
                 </div>
