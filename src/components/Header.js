@@ -66,6 +66,21 @@ const Header = () => {
                             </Link>
 
                             <Link
+                                to="/student/profile"
+                                className="me-3"
+                            >
+
+                                <Button
+                                    variant="outline-success"
+                                >
+
+                                    Hồ sơ
+
+                                </Button>
+
+                            </Link>
+
+                            <Link
                                 to="/student/bookmarks"
                                 className="me-3"
                             >

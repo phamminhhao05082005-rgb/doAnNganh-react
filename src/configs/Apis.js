@@ -39,6 +39,16 @@ export const endpoints = {
     unBookmark: (jobId) =>
         `/auth/student/bookmarks/${jobId}`,
 
+    studentProfile: "/auth/student/profile",
+
+    updateStudentProfile: "/auth/student/profile",
+
+    educations: "/auth/student/educations",
+    education: (id) => `/auth/student/educations/${id}`,
+
+    experiences: "/auth/student/experiences",
+    experience: (id) => `/auth/student/experiences/${id}`,
+
 };
 
 export const authApis = () => {

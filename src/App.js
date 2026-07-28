@@ -17,6 +17,9 @@ import EmployerJobs from "./screens/Employer/EmployerJobs";
 import JobDetail from "./screens/Employer/JobDetail";
 import JobForm from "./screens/Employer/JobForm";
 import StudentBookmarks from "./screens/Student/StudentBookmarks";
+import StudentProfile from "./screens/Student/StudentProfile";
+import StudentEducations from "./screens/Student/StudentEducations";
+import StudentExperiences from "./screens/Student/StudentExperiences";
 
 function App() {
 
@@ -60,6 +63,33 @@ function App() {
               element={
                 <ProtectedRoute roles={["STUDENT"]}>
                   <StudentBookmarks />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/profile"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentProfile />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/educations"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentEducations />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/experiences"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentExperiences />
                 </ProtectedRoute>
               }
             />
