@@ -95,6 +95,12 @@ const Header = () => {
 
                             </Link>
 
+                            <Link to="/student/cvs/manage">
+                                <Button variant="dark">
+                                    Quản lý CV
+                                </Button>
+                            </Link>
+
                         </>
 
                     }

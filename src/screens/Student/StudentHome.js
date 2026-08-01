@@ -5,6 +5,10 @@ import { authApis, endpoints } from "../../configs/Apis";
 import dayjs from "dayjs";
 import { useContext } from "react";
 import { MyUserContext } from "../../configs/Contexts";
+import StudentCVTemplates from "./StudentCVTemplates";
+import CVTemplate1 from "./CVTemplate1";
+import CVTemplate2 from "./CVTemplate2";
+import CVTemplate3 from "./CVTemplate3";
 
 const StudentHome = () => {
     const [user] = useContext(MyUserContext);

@@ -49,6 +49,26 @@ export const endpoints = {
     experiences: "/auth/student/experiences",
     experience: (id) => `/auth/student/experiences/${id}`,
 
+    cvTemplates: "/auth/student/cv-templates",
+
+    cvTemplate: (id) =>
+        `/auth/student/cv-templates/${id}`,
+
+    cvs: "/auth/student/cvs",
+    cv: (id) => `/auth/student/cvs/${id}`,
+
+    cvEducations: (cvId) =>
+        `/auth/student/cvs/${cvId}/educations`,
+
+    cvEducation: (cvId, id) =>
+        `/auth/student/cvs/${cvId}/educations/${id}`,
+
+    cvExperiences: (cvId) =>
+        `/auth/student/cvs/${cvId}/experiences`,
+
+    cvExperience: (cvId, id) =>
+        `/auth/student/cvs/${cvId}/experiences/${id}`,
+
 };
 
 export const authApis = () => {

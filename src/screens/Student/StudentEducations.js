@@ -8,6 +8,7 @@ import {
     Spinner
 } from "react-bootstrap";
 import { authApis, endpoints } from "../../configs/Apis";
+import dayjs from "dayjs";
 
 const StudentEducations = () => {
 
@@ -20,10 +21,12 @@ const StudentEducations = () => {
     const [editingId, setEditingId] = useState(null);
 
     const [form, setForm] = useState({
-        school: "",
+        school_name: "",
         major: "",
-        start_year: "",
-        end_year: ""
+        degree: "",
+        gpa: "",
+        start_date: "",
+        end_date: ""
     });
 
     const loadEducations = async () => {
@@ -59,10 +62,12 @@ const StudentEducations = () => {
         setEditingId(null);
 
         setForm({
-            school: "",
+            school_name: "",
             major: "",
-            start_year: "",
-            end_year: ""
+            degree: "",
+            gpa: "",
+            start_date: "",
+            end_date: ""
         });
 
         setShow(true);
@@ -75,13 +80,17 @@ const StudentEducations = () => {
 
         setForm({
 
-            school: e.school,
+            school_name: e.school_name,
 
             major: e.major,
 
-            start_year: e.start_year,
+            degree: e.degree || "",
 
-            end_year: e.end_year || ""
+            gpa: e.gpa || "",
+
+            start_date: e.start_date,
+
+            end_date: e.end_date || ""
 
         });
 
@@ -189,6 +198,10 @@ const StudentEducations = () => {
 
                             <th>Chuyên ngành</th>
 
+                            <th>Bằng cấp</th>
+
+                            <th>GPA</th>
+
                             <th>Bắt đầu</th>
 
                             <th>Kết thúc</th>
@@ -213,7 +226,7 @@ const StudentEducations = () => {
 
                                     <td>
 
-                                        {e.school}
+                                        {e.school_name}
 
                                     </td>
 
@@ -225,7 +238,19 @@ const StudentEducations = () => {
 
                                     <td>
 
-                                        {e.start_year}
+                                        {e.degree || "-"}
+
+                                    </td>
+
+                                    <td>
+
+                                        {e.gpa || "-"}
+
+                                    </td>
+
+                                    <td>
+
+                                        {dayjs(e.start_date).format("DD/MM/YYYY")}
 
                                     </td>
 
@@ -233,9 +258,9 @@ const StudentEducations = () => {
 
                                         {
 
-                                            e.end_year ||
-
-                                            "Đang học"
+                                            e.end_date
+                                                ? dayjs(e.end_date).format("DD/MM/YYYY")
+                                                : "Đang học"
 
                                         }
 
@@ -325,7 +350,7 @@ const StudentEducations = () => {
 
                         <Form.Control
 
-                            value={form.school}
+                            value={form.school_name}
 
                             onChange={e =>
 
@@ -333,7 +358,7 @@ const StudentEducations = () => {
 
                                     ...form,
 
-                                    school: e.target.value
+                                    school_name: e.target.value
 
                                 })
 
@@ -375,15 +400,13 @@ const StudentEducations = () => {
 
                         <Form.Label>
 
-                            Năm bắt đầu
+                            Bằng cấp
 
                         </Form.Label>
 
                         <Form.Control
 
-                            type="number"
-
-                            value={form.start_year}
+                            value={form.degree}
 
                             onChange={e =>
 
@@ -391,7 +414,69 @@ const StudentEducations = () => {
 
                                     ...form,
 
-                                    start_year: e.target.value
+                                    degree: e.target.value
+
+                                })
+
+                            }
+
+                        />
+
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+
+                        <Form.Label>
+
+                            GPA
+
+                        </Form.Label>
+
+                        <Form.Control
+
+                            type="number"
+
+                            step="0.01"
+
+                            value={form.gpa}
+
+                            onChange={e =>
+
+                                setForm({
+
+                                    ...form,
+
+                                    gpa: e.target.value
+
+                                })
+
+                            }
+
+                        />
+
+                    </Form.Group>
+
+                    <Form.Group className="mb-3">
+
+                        <Form.Label>
+
+                            Ngày bắt đầu
+
+                        </Form.Label>
+
+                        <Form.Control
+
+                            type="date"
+
+                            value={form.start_date}
+
+                            onChange={e =>
+
+                                setForm({
+
+                                    ...form,
+
+                                    start_date: e.target.value
 
                                 })
 
@@ -405,15 +490,15 @@ const StudentEducations = () => {
 
                         <Form.Label>
 
-                            Năm kết thúc
+                            Ngày kết thúc
 
                         </Form.Label>
 
                         <Form.Control
 
-                            type="number"
+                            type="date"
 
-                            value={form.end_year}
+                            value={form.end_date}
 
                             onChange={e =>
 
@@ -421,7 +506,7 @@ const StudentEducations = () => {
 
                                     ...form,
 
-                                    end_year: e.target.value
+                                    end_date: e.target.value
 
                                 })
 

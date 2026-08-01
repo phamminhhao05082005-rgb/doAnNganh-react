@@ -20,6 +20,12 @@ import StudentBookmarks from "./screens/Student/StudentBookmarks";
 import StudentProfile from "./screens/Student/StudentProfile";
 import StudentEducations from "./screens/Student/StudentEducations";
 import StudentExperiences from "./screens/Student/StudentExperiences";
+import StudentCVTemplates from './screens/Student/StudentCVTemplates';
+import CVTemplate1 from './screens/Student/CVTemplate1';
+import CVTemplate2 from './screens/Student/CVTemplate2';
+import CVTemplate3 from './screens/Student/CVTemplate3';
+import StudentCVs from './screens/Student/StudentCVs';
+import CVDetail from './screens/Student/CVDetail';
 
 function App() {
 
@@ -90,6 +96,33 @@ function App() {
               element={
                 <ProtectedRoute roles={["STUDENT"]}>
                   <StudentExperiences />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/cvs"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentCVTemplates />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/cvs/:id"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <CVDetail />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/student/cvs/manage"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentCVs />
                 </ProtectedRoute>
               }
             />
