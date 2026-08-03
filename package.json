@@ -12,6 +12,8 @@
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.21",
     "firebase": "^12.14.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
     "moment": "^2.30.1",
     "react": "^19.2.5",
     "react-bootstrap": "^2.10.10",
