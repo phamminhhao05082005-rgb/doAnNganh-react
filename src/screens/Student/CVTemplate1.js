@@ -1,17 +1,14 @@
-import {
-    Card,
-    Row,
-    Col,
-    Image,
-    Form,
-    Button
-} from "react-bootstrap";
+import { Card, Row, Col, Image, Form, Button } from "react-bootstrap";
 import { useEffect, useState, useRef } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
-const CVTemplate1 = ({ cv, onSave }) => {
+const CVTemplate1 = ({
+    cv,
+    onSave,
+    editable = true
+}) => {
     const [form, setForm] = useState({});
     const [educations, setEducations] = useState([]);
     const [experiences, setExperiences] = useState([]);
@@ -102,7 +99,7 @@ const CVTemplate1 = ({ cv, onSave }) => {
 
     const removeEducation = (index) => {
         const item = educations[index];
-        if (item.id) {
+        if (item?.id) {
             setDeletedEducationIds(prev => [...prev, item.id]);
         }
         setEducations(prev => prev.filter((_, i) => i !== index));
@@ -132,7 +129,7 @@ const CVTemplate1 = ({ cv, onSave }) => {
 
     const removeExperience = (index) => {
         const item = experiences[index];
-        if (item.id) {
+        if (item?.id) {
             setDeletedExperienceIds(prev => [...prev, item.id]);
         }
         setExperiences(prev => prev.filter((_, i) => i !== index));
@@ -146,12 +143,22 @@ const CVTemplate1 = ({ cv, onSave }) => {
         <div>
             {!isExporting && (
                 <div className="text-end mb-3">
-                    <Button variant="primary" className="me-2" onClick={exportPDF}>
+                    <Button
+                        variant="primary"
+                        className={editable ? "me-2" : ""}
+                        onClick={exportPDF}
+                    >
                         Xuất PDF
                     </Button>
-                    <Button variant="success" onClick={save}>
-                        Lưu CV
-                    </Button>
+
+                    {editable && (
+                        <Button
+                            variant="success"
+                            onClick={save}
+                        >
+                            Lưu CV
+                        </Button>
+                    )}
                 </div>
             )}
 
@@ -170,7 +177,7 @@ const CVTemplate1 = ({ cv, onSave }) => {
                                         border: "4px solid white"
                                     }}
                                 />
-                                {isExporting ? (
+                                {!editable || isExporting ? (
                                     <div className="mt-3">
                                         <h4 className="fw-bold mb-1">{form.full_name || "Họ và tên"}</h4>
                                         <div className="text-light opacity-75">{form.job_title || "Vị trí ứng tuyển"}</div>
@@ -198,12 +205,12 @@ const CVTemplate1 = ({ cv, onSave }) => {
                             <hr className="bg-light" />
 
                             <h5 className="fw-bold mb-3">THÔNG TIN LIÊN HỆ</h5>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div className="lh-lg fs-6">
                                     {form.email && <div><strong>Email:</strong> {form.email}</div>}
                                     {form.phone && <div><strong>SĐT:</strong> {form.phone}</div>}
                                     {form.expected_salary && <div><strong>Lương mong muốn:</strong> {form.expected_salary} VNĐ</div>}
-                                    {form.experience_year && <div><strong>Kinh nghiệm:</strong> {form.experience_year} năm</div>}
+                                    {form.experience_year !== undefined && <div><strong>Kinh nghiệm:</strong> {form.experience_year} năm</div>}
                                 </div>
                             ) : (
                                 <>
@@ -249,7 +256,7 @@ const CVTemplate1 = ({ cv, onSave }) => {
                         </Col>
 
                         <Col md={8} xs={8} className="p-4 bg-white">
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div className="mb-4">
                                     <h2 className="fw-bold text-primary">{form.title || "HỒ SƠ NĂNG LỰC"}</h2>
                                 </div>
@@ -264,15 +271,15 @@ const CVTemplate1 = ({ cv, onSave }) => {
                             )}
 
                             <h4 className="fw-bold border-bottom pb-2 text-dark">GIỚI THIỆU</h4>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <p style={{ whiteSpace: "pre-line" }} className="text-secondary fs-6">
-                                    {form.summary || "Chưa cập nhật"}
+                                    {form.summary || "Chưa cập nhật phần giới thiệu bản thân."}
                                 </p>
                             ) : (
                                 <Form.Group className="mb-4">
                                     <Form.Control
                                         as="textarea"
-                                        rows={4}
+                                        rows={3}
                                         value={form.summary || ""}
                                         onChange={(e) => change("summary", e.target.value)}
                                     />
@@ -280,186 +287,189 @@ const CVTemplate1 = ({ cv, onSave }) => {
                             )}
 
                             <h4 className="fw-bold border-bottom pb-2 text-dark mt-4">HỌC VẤN</h4>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div>
                                     {educations.map((edu, index) => (
                                         <div key={index} className="mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <h6 className="fw-bold mb-0 text-dark">{edu.school_name}</h6>
-                                                <small className="text-muted">
-                                                    {formatDate(edu.start_date)} - {formatDate(edu.end_date)}
-                                                </small>
-                                            </div>
-                                            <div className="text-secondary fs-6">
-                                                {edu.major && <span>Chuyên ngành: {edu.major}</span>}
-                                                {edu.degree && <span> | Bằng cấp: {edu.degree}</span>}
-                                                {edu.gpa && <span> | GPA: {edu.gpa}</span>}
+                                            <div className="fw-bold text-dark">{edu.school_name}</div>
+                                            <div className="text-primary">{edu.major} {edu.degree ? `- ${edu.degree}` : ""}</div>
+                                            <div className="text-muted small">
+                                                {formatDate(edu.start_date)} - {formatDate(edu.end_date) || "Hiện tại"}
+                                                {edu.gpa && ` | GPA: ${edu.gpa}`}
                                             </div>
                                         </div>
                                     ))}
+                                    {educations.length === 0 && <p className="text-muted">Chưa có thông tin học vấn.</p>}
                                 </div>
                             ) : (
-                                <>
+                                <div>
                                     {educations.map((edu, index) => (
-                                        <Card key={edu.id ?? index} className="mb-3 border shadow-sm">
-                                            <Card.Body>
-                                                <Row>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Trường</Form.Label>
-                                                            <Form.Control
-                                                                value={edu.school_name || ""}
-                                                                onChange={(e) => changeEducation(index, "school_name", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Chuyên ngành</Form.Label>
-                                                            <Form.Control
-                                                                value={edu.major || ""}
-                                                                onChange={(e) => changeEducation(index, "major", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Bằng cấp</Form.Label>
-                                                            <Form.Control
-                                                                value={edu.degree || ""}
-                                                                onChange={(e) => changeEducation(index, "degree", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>GPA</Form.Label>
-                                                            <Form.Control
-                                                                value={edu.gpa || ""}
-                                                                onChange={(e) => changeEducation(index, "gpa", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Ngày bắt đầu</Form.Label>
-                                                            <Form.Control
-                                                                type="date"
-                                                                value={edu.start_date || ""}
-                                                                onChange={(e) => changeEducation(index, "start_date", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Ngày kết thúc</Form.Label>
-                                                            <Form.Control
-                                                                type="date"
-                                                                value={edu.end_date || ""}
-                                                                onChange={(e) => changeEducation(index, "end_date", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                </Row>
-                                                <div className="text-end mt-2">
-                                                    <Button variant="outline-danger" size="sm" onClick={() => removeEducation(index)}>
-                                                        Xóa
-                                                    </Button>
-                                                </div>
-                                            </Card.Body>
+                                        <Card key={index} className="mb-3 p-3 bg-light border">
+                                            <Row className="g-2">
+                                                <Col md={6}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Trường</Form.Label>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            value={edu.school_name || ""}
+                                                            onChange={(e) => changeEducation(index, "school_name", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Chuyên ngành</Form.Label>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            value={edu.major || ""}
+                                                            onChange={(e) => changeEducation(index, "major", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={4}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Bằng cấp</Form.Label>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            value={edu.degree || ""}
+                                                            onChange={(e) => changeEducation(index, "degree", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={2}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">GPA</Form.Label>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            value={edu.gpa || ""}
+                                                            onChange={(e) => changeEducation(index, "gpa", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Bắt đầu</Form.Label>
+                                                        <Form.Control
+                                                            type="date"
+                                                            size="sm"
+                                                            value={edu.start_date ? edu.start_date.substring(0, 10) : ""}
+                                                            onChange={(e) => changeEducation(index, "start_date", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={3}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Kết thúc</Form.Label>
+                                                        <Form.Control
+                                                            type="date"
+                                                            size="sm"
+                                                            value={edu.end_date ? edu.end_date.substring(0, 10) : ""}
+                                                            onChange={(e) => changeEducation(index, "end_date", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                            </Row>
+                                            <div className="text-end mt-2">
+                                                <Button variant="outline-danger" size="sm" onClick={() => removeEducation(index)}>
+                                                    Xóa
+                                                </Button>
+                                            </div>
                                         </Card>
                                     ))}
-                                    <Button variant="outline-primary" size="sm" className="mb-4" onClick={addEducation}>
-                                        + Thêm học vấn
+                                    <Button variant="outline-primary" size="sm" onClick={addEducation}>
+                                        + Thêm Học Vấn
                                     </Button>
-                                </>
+                                </div>
                             )}
 
-                            <h4 className="fw-bold border-bottom pb-2 text-dark mt-2">KINH NGHIỆM LÀM VIỆC</h4>
-                            {isExporting ? (
+                            <h4 className="fw-bold border-bottom pb-2 text-dark mt-4">KINH NGHIỆM LÀM VIỆC</h4>
+                            {!editable || isExporting ? (
                                 <div>
                                     {experiences.map((exp, index) => (
                                         <div key={index} className="mb-3">
-                                            <div className="d-flex justify-content-between align-items-center">
-                                                <h6 className="fw-bold mb-0 text-dark">{exp.position} - {exp.company_name}</h6>
-                                                <small className="text-muted">
-                                                    {formatDate(exp.start_date)} - {formatDate(exp.end_date)}
-                                                </small>
+                                            <div className="fw-bold text-dark">{exp.position}</div>
+                                            <div className="text-primary">{exp.company_name}</div>
+                                            <div className="text-muted small mb-1">
+                                                {formatDate(exp.start_date)} - {formatDate(exp.end_date) || "Hiện tại"}
                                             </div>
-                                            <p style={{ whiteSpace: "pre-line" }} className="text-secondary fs-6 mt-1">
+                                            <p style={{ whiteSpace: "pre-line" }} className="text-secondary small">
                                                 {exp.description}
                                             </p>
                                         </div>
                                     ))}
+                                    {experiences.length === 0 && <p className="text-muted">Chưa có thông tin kinh nghiệm.</p>}
                                 </div>
                             ) : (
-                                <>
+                                <div>
                                     {experiences.map((exp, index) => (
-                                        <Card key={exp.id ?? index} className="mb-3 border shadow-sm">
-                                            <Card.Body>
-                                                <Row>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Công ty</Form.Label>
-                                                            <Form.Control
-                                                                value={exp.company_name || ""}
-                                                                onChange={(e) => changeExperience(index, "company_name", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Vị trí</Form.Label>
-                                                            <Form.Control
-                                                                value={exp.position || ""}
-                                                                onChange={(e) => changeExperience(index, "position", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Ngày bắt đầu</Form.Label>
-                                                            <Form.Control
-                                                                type="date"
-                                                                value={exp.start_date || ""}
-                                                                onChange={(e) => changeExperience(index, "start_date", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={6}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Ngày kết thúc</Form.Label>
-                                                            <Form.Control
-                                                                type="date"
-                                                                value={exp.end_date || ""}
-                                                                onChange={(e) => changeExperience(index, "end_date", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                    <Col md={12}>
-                                                        <Form.Group className="mb-2">
-                                                            <Form.Label>Mô tả công việc</Form.Label>
-                                                            <Form.Control
-                                                                as="textarea"
-                                                                rows={3}
-                                                                value={exp.description || ""}
-                                                                onChange={(e) => changeExperience(index, "description", e.target.value)}
-                                                            />
-                                                        </Form.Group>
-                                                    </Col>
-                                                </Row>
-                                                <div className="text-end mt-2">
-                                                    <Button variant="outline-danger" size="sm" onClick={() => removeExperience(index)}>
-                                                        Xóa
-                                                    </Button>
-                                                </div>
-                                            </Card.Body>
+                                        <Card key={index} className="mb-3 p-3 bg-light border">
+                                            <Row className="g-2">
+                                                <Col md={6}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Công ty</Form.Label>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            value={exp.company_name || ""}
+                                                            onChange={(e) => changeExperience(index, "company_name", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Vị trí</Form.Label>
+                                                        <Form.Control
+                                                            size="sm"
+                                                            value={exp.position || ""}
+                                                            onChange={(e) => changeExperience(index, "position", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Bắt đầu</Form.Label>
+                                                        <Form.Control
+                                                            type="date"
+                                                            size="sm"
+                                                            value={exp.start_date ? exp.start_date.substring(0, 10) : ""}
+                                                            onChange={(e) => changeExperience(index, "start_date", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={6}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Kết thúc</Form.Label>
+                                                        <Form.Control
+                                                            type="date"
+                                                            size="sm"
+                                                            value={exp.end_date ? exp.end_date.substring(0, 10) : ""}
+                                                            onChange={(e) => changeExperience(index, "end_date", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                                <Col md={12}>
+                                                    <Form.Group>
+                                                        <Form.Label className="small fw-bold">Mô tả công việc</Form.Label>
+                                                        <Form.Control
+                                                            as="textarea"
+                                                            rows={2}
+                                                            size="sm"
+                                                            value={exp.description || ""}
+                                                            onChange={(e) => changeExperience(index, "description", e.target.value)}
+                                                        />
+                                                    </Form.Group>
+                                                </Col>
+                                            </Row>
+                                            <div className="text-end mt-2">
+                                                <Button variant="outline-danger" size="sm" onClick={() => removeExperience(index)}>
+                                                    Xóa
+                                                </Button>
+                                            </div>
                                         </Card>
                                     ))}
-                                    <Button variant="outline-primary" size="sm" className="mb-4" onClick={addExperience}>
-                                        + Thêm kinh nghiệm
+                                    <Button variant="outline-primary" size="sm" onClick={addExperience}>
+                                        + Thêm Kinh Nghiệm
                                     </Button>
-                                </>
+                                </div>
                             )}
                         </Col>
                     </Row>
@@ -469,4 +479,4 @@ const CVTemplate1 = ({ cv, onSave }) => {
     );
 };
 
-export default CVTemplate1;
+export default CVTemplate1; 

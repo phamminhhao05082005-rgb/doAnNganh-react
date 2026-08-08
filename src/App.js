@@ -26,6 +26,9 @@ import CVTemplate2 from './screens/Student/CVTemplate2';
 import CVTemplate3 from './screens/Student/CVTemplate3';
 import StudentCVs from './screens/Student/StudentCVs';
 import CVDetail from './screens/Student/CVDetail';
+import StudentApplications from './screens/Student/StudentApplications';
+import EmployerApplications from './screens/Employer/EmployerApplications';
+
 
 function App() {
 
@@ -128,6 +131,15 @@ function App() {
             />
 
             <Route
+              path="/student/applications"
+              element={
+                <ProtectedRoute roles={["STUDENT"]}>
+                  <StudentApplications />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
 
               path="/employer"
 
@@ -198,6 +210,24 @@ function App() {
               element={
                 <ProtectedRoute roles={["EMPLOYER"]}>
                   <JobForm />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/employer/jobs/:jobId/applications"
+              element={
+                <ProtectedRoute roles={["EMPLOYER"]}>
+                  <EmployerApplications />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/employer/jobs/:jobId/applications/:applicationId"
+              element={
+                <ProtectedRoute roles={["EMPLOYER"]}>
+                  <CVDetail />
                 </ProtectedRoute>
               }
             />

@@ -69,6 +69,21 @@ export const endpoints = {
     cvExperience: (cvId, id) =>
         `/auth/student/cvs/${cvId}/experiences/${id}`,
 
+    applications: "/auth/student/applications",
+    myApplications: "/auth/student/applications",
+
+    deleteApplication: (id) =>
+        `/auth/student/applications/${id}`,
+
+    employerApplications: (jobId) =>
+        `/auth/employer/jobs/${jobId}/applications`,
+
+    updateApplicationStatus: (id) =>
+        `/auth/employer/applications/${id}/status`,
+
+    updateApplicationStatus: (id) =>
+        `/auth/employer/applications/${id}/status`,
+
 };
 
 export const authApis = () => {

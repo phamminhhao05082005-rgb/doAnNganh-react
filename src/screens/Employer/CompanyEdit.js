@@ -46,24 +46,6 @@ const CompanyEdit = () => {
         }
     }
 
-    // const save = async (e) => {
-
-    //     e.preventDefault();
-
-    //     await authApis().put(
-
-    //         endpoints["updateMyCompany"],
-
-    //         data
-
-    //     );
-
-    //     alert("Cập nhật thành công");
-
-    //     nav("/employer/company");
-
-    // }
-
     return (
 
         <Card className="mt-4">

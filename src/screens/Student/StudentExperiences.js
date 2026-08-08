@@ -1,12 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    Card,
-    Button,
-    Table,
-    Modal,
-    Form,
-    Spinner
-} from "react-bootstrap";
+import {Card, Button, Table, Modal, Form, Spinner} from "react-bootstrap";
 import { authApis, endpoints } from "../../configs/Apis";
 import dayjs from "dayjs";
 

@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    Row,
-    Col,
-    Card,
-    Button,
-    Spinner
-} from "react-bootstrap";
+import {Row, Col, Card, Button, Spinner } from "react-bootstrap";
 import { useNavigate, Link } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
 

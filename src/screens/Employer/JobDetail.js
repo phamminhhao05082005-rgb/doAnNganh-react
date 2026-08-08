@@ -2,12 +2,18 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
 import dayjs from "dayjs";
-import { Card, Spinner, Button, Badge } from "react-bootstrap";
+import { Card, Spinner, Button, Badge, Modal, Form } from "react-bootstrap";
 import { useContext } from "react";
 import { MyUserContext } from "../../configs/Contexts";
 import { toast } from "react-toastify";
 
 const JobDetail = () => {
+
+    const [showApply, setShowApply] = useState(false);
+
+    const [cvs, setCVs] = useState([]);
+
+    const [selectedCV, setSelectedCV] = useState("");
 
     const [user] = useContext(MyUserContext);
 
@@ -64,6 +70,60 @@ const JobDetail = () => {
         }
     };
 
+    const openApplyModal = async () => {
+
+        try {
+
+            const res = await authApis().get(
+                endpoints.cvs
+            );
+
+            setCVs(res.data.data || []);
+
+            if (res.data.data.length > 0)
+                setSelectedCV(res.data.data[0].id);
+
+            setShowApply(true);
+
+        } catch (err) {
+
+            console.error(err);
+
+            alert("Không tải được danh sách CV");
+
+        }
+
+    };
+
+    const applyJob = async () => {
+
+        try {
+
+            await authApis().post(
+                endpoints.applications,
+                {
+                    job_id: job.id,
+                    cv_id: selectedCV
+                }
+            );
+
+            toast.success("Ứng tuyển thành công");
+
+            setShowApply(false);
+
+        } catch (err) {
+
+            console.error(err);
+
+            toast.error(
+                err.response?.data?.message ||
+                "Ứng tuyển thất bại"
+            );
+
+        }
+
+    };
+
     useEffect(() => {
 
         loadJob();
@@ -74,6 +134,8 @@ const JobDetail = () => {
         return <Spinner className="mt-5" />;
 
     return (
+
+
 
         <Card className="mt-4">
 
@@ -264,19 +326,32 @@ const JobDetail = () => {
                 <div className="d-flex gap-2">
 
                     {user?.role === "EMPLOYER" && (
-                        <Link to={`/employer/jobs/${job.id}/edit`}>
-                            <Button variant="warning">
-                                Chỉnh sửa
-                            </Button>
-                        </Link>
+                        <>
+                            <Link to={`/employer/jobs/${job.id}/edit`}>
+                                <Button variant="warning">
+                                    Chỉnh sửa
+                                </Button>
+                            </Link>
+
+                            <Link to={`/employer/jobs/${job.id}/applications`}>
+                                <Button variant="primary">
+                                    Danh sách ứng tuyển
+                                </Button>
+                            </Link>
+                        </>
                     )}
 
                     {user?.role === "STUDENT" && (
-
                         <>
-                            <Button variant="success">
-                                Ứng tuyển
-                            </Button>
+
+                            {!job.applied && (
+                                <Button
+                                    variant="success"
+                                    onClick={openApplyModal}
+                                >
+                                    Ứng tuyển
+                                </Button>
+                            )}
 
                             <Button
                                 variant={
@@ -292,14 +367,113 @@ const JobDetail = () => {
                                         : "Lưu việc làm"
                                 }
                             </Button>
-                        </>
 
+                        </>
                     )}
 
                 </div>
 
             </Card.Body>
 
+
+            <Modal
+                show={showApply}
+                onHide={() => setShowApply(false)}
+            >
+
+                <Modal.Header closeButton>
+
+                    <Modal.Title>
+
+                        Chọn CV để ứng tuyển
+
+                    </Modal.Title>
+
+                </Modal.Header>
+
+                <Modal.Body>
+
+                    {
+                        cvs.length === 0 ?
+
+                            <p>
+
+                                Bạn chưa có CV.
+                                Hãy tạo CV trước.
+
+                            </p>
+
+                            :
+
+                            <Form.Group>
+
+                                <Form.Label>
+
+                                    CV
+
+                                </Form.Label>
+
+                                <Form.Select
+
+                                    value={selectedCV}
+
+                                    onChange={(e) =>
+                                        setSelectedCV(e.target.value)
+                                    }
+
+                                >
+
+                                    {
+                                        cvs.map(cv => (
+
+                                            <option
+                                                key={cv.id}
+                                                value={cv.id}
+                                            >
+
+                                                {cv.title}
+
+                                            </option>
+
+                                        ))
+                                    }
+
+                                </Form.Select>
+
+                            </Form.Group>
+
+                    }
+
+                </Modal.Body>
+
+                <Modal.Footer>
+
+                    <Button
+                        variant="secondary"
+                        onClick={() => setShowApply(false)}
+                    >
+                        Hủy
+                    </Button>
+
+                    <Button
+
+                        variant="success"
+
+                        disabled={
+                            cvs.length === 0
+                        }
+
+                        onClick={applyJob}
+
+                    >
+
+                        Xác nhận ứng tuyển
+
+                    </Button>
+
+                </Modal.Footer>
+
+            </Modal>
         </Card>
 
     )

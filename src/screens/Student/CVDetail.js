@@ -1,226 +1,248 @@
 import { useEffect, useState } from "react";
-import { Spinner } from "react-bootstrap";
-import { useParams } from "react-router-dom";
-
+import { Spinner, Button, Badge, Card } from "react-bootstrap";
+import { useParams, Link } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
-
 import CVTemplate1 from "./CVTemplate1";
 import CVTemplate2 from "./CVTemplate2";
 import CVTemplate3 from "./CVTemplate3";
+import CVTemplate4 from "./CVTemplate4";
+import CVTemplate5 from "./CVTemplate5";
+import CVTemplate6 from "./CVTemplate6";
+import { toast } from "react-toastify";
 
 const CVDetail = () => {
-
-    const { id } = useParams();
-
+    const { id, jobId, applicationId } = useParams();
     const [loading, setLoading] = useState(true);
-
     const [cv, setCV] = useState(null);
+    const [application, setApplication] = useState(null);
 
-    const loadCV = async (showLoading = true) => {
+    const isEmployer = !!applicationId;
+    const editable = !isEmployer;
 
-    if (showLoading)
-        setLoading(true);
+    const loadStudentCV = async (showLoading = true) => {
+        if (showLoading) setLoading(true);
+        try {
+            const res = await authApis().get(endpoints.cv(id));
+            setCV(res.data.data);
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Không thể tải CV");
+        } finally {
+            if (showLoading) setLoading(false);
+        }
+    };
 
-    try {
+    const loadEmployerApplication = async () => {
+        try {
+            setLoading(true);
+            const res = await authApis().get(endpoints.employerApplications(jobId));
+            const applications = res.data.data || [];
+            const found = applications.find(
+                item => String(item.id) === String(applicationId)
+            );
 
-        const res = await authApis().get(
-            endpoints.cv(id)
-        );
+            if (!found) {
+                toast.error("Không tìm thấy hồ sơ ứng tuyển");
+                setApplication(null);
+                setCV(null);
+                return;
+            }
 
-        setCV(res.data.data);
-
-    }
-
-    catch (err) {
-
-        console.error(err);
-
-    }
-
-    finally {
-
-        if (showLoading)
+            setApplication(found);
+            setCV(found.cv);
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Không thể tải hồ sơ ứng tuyển");
+        } finally {
             setLoading(false);
-
-    }
-
-};
+        }
+    };
 
     useEffect(() => {
+        if (isEmployer) {
+            loadEmployerApplication();
+        } else {
+            loadStudentCV();
+        }
+    }, [id, jobId, applicationId]);
 
-        loadCV();
+    const updateCV = async (data) => {
+        try {
+            const {
+                educations,
+                experiences,
+                deletedEducationIds,
+                deletedExperienceIds,
+                ...cvData
+            } = data;
 
-    }, [id]);
+            await authApis().put(endpoints.cv(id), cvData);
 
-   const updateCV = async (data) => {
+            for (const edu of educations || []) {
+                if (edu.id) {
+                    await authApis().put(endpoints.cvEducation(id, edu.id), edu);
+                } else {
+                    await authApis().post(endpoints.cvEducations(id), edu);
+                }
+            }
 
-    try {
+            for (const eduId of deletedEducationIds || []) {
+                await authApis().delete(endpoints.cvEducation(id, eduId));
+            }
 
-        const {
+            for (const exp of experiences || []) {
+                if (exp.id) {
+                    await authApis().put(endpoints.cvExperience(id, exp.id), exp);
+                } else {
+                    await authApis().post(endpoints.cvExperiences(id), exp);
+                }
+            }
 
-            educations,
-            experiences,
-            deletedEducationIds,
-            deletedExperienceIds,
+            for (const expId of deletedExperienceIds || []) {
+                await authApis().delete(endpoints.cvExperience(id, expId));
+            }
 
-            ...cvData
+            await loadStudentCV(false);
+            toast.success("Lưu CV thành công!");
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Lưu CV thất bại!");
+        }
+    };
 
-        } = data;
+    const updateApplicationStatus = async (status) => {
+        if (!application) return;
 
-        await authApis().put(
+        try {
+            const res = await authApis().put(
+                endpoints.updateApplicationStatus(application.id),
+                { status }
+            );
 
-            endpoints.cv(id),
+            const updatedStatus = res.data.data?.status || status;
 
-            cvData
+            setApplication(prev => ({
+                ...prev,
+                status: updatedStatus
+            }));
 
+            if (updatedStatus === "ACCEPTED") {
+                toast.success("Đã duyệt ứng viên");
+            } else if (updatedStatus === "REJECTED") {
+                toast.success("Đã từ chối ứng viên");
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(err.response?.data?.message || "Không thể cập nhật trạng thái");
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="text-center mt-5">
+                <Spinner animation="border" />
+            </div>
         );
-
-        for (const edu of educations) {
-
-            if (edu.id) {
-
-                await authApis().put(
-
-                    endpoints.cvEducation(id, edu.id),
-
-                    edu
-
-                );
-
-            } else {
-
-                await authApis().post(
-
-                    endpoints.cvEducations(id),
-
-                    edu
-
-                );
-
-            }
-
-        }
-
-        for (const eduId of deletedEducationIds) {
-
-            await authApis().delete(
-
-                endpoints.cvEducation(id, eduId)
-
-            );
-
-        }
-
-        for (const exp of experiences) {
-
-            if (exp.id) {
-
-                await authApis().put(
-
-                    endpoints.cvExperience(id, exp.id),
-
-                    exp
-
-                );
-
-            } else {
-
-                await authApis().post(
-
-                    endpoints.cvExperiences(id),
-
-                    exp
-
-                );
-
-            }
-
-        }
-
-        for (const expId of deletedExperienceIds) {
-
-            await authApis().delete(
-
-                endpoints.cvExperience(id, expId)
-
-            );
-
-        }
-
-        await loadCV(false);
-
-        alert("Lưu thành công!");
-
     }
 
-    catch (err) {
-
-        console.error(err);
-
-        alert("Lưu thất bại!");
-
+    if (!cv) {
+        return (
+            <Card className="mt-4">
+                <Card.Body>
+                    <h4>Không tìm thấy CV</h4>
+                    <Link to={isEmployer ? `/employer/jobs/${jobId}/applications` : "/student"}>
+                        <Button variant="secondary" className="mt-3">
+                            Quay lại
+                        </Button>
+                    </Link>
+                </Card.Body>
+            </Card>
+        );
     }
 
-};
+    const templateProps = {
+        cv,
+        editable,
+        onSave: editable ? updateCV : undefined,
+        application: isEmployer ? application : null,
+        onUpdateStatus: isEmployer ? updateApplicationStatus : undefined
+    };
 
-    if (loading)
+    const templateId = Number(cv.template_id || cv.templateId || 1);
 
-        return <Spinner className="mt-5" />;
-
-    if (!cv)
-
-        return <h3>Không tìm thấy CV</h3>;
-
-    switch (cv.template_id) {
-
+    let template;
+    switch (templateId) {
         case 1:
-
-            return (
-
-                <CVTemplate1
-
-                    cv={cv}
-
-                    onSave={updateCV}
-
-                />
-
-            );
-
+            template = <CVTemplate1 {...templateProps} />;
+            break;
         case 2:
-
-            return (
-
-                <CVTemplate2
-
-                    cv={cv}
-
-                    onSave={updateCV}
-
-                />
-
-            );
-
+            template = <CVTemplate2 {...templateProps} />;
+            break;
         case 3:
-
-            return (
-
-                <CVTemplate3
-
-                    cv={cv}
-
-                    onSave={updateCV}
-
-                />
-
-            );
-
+            template = <CVTemplate3 {...templateProps} />;
+            break;
+        case 4:
+            template = <CVTemplate4 {...templateProps} />;
+            break;
+        case 5:
+            template = <CVTemplate5 {...templateProps} />;
+            break;
+        case 6:
+            template = <CVTemplate6 {...templateProps} />;
+            break;
         default:
-
-            return <h3>Template không tồn tại</h3>;
-
+            template = <CVTemplate1 {...templateProps} />;
+            break;
     }
 
+    return (
+        <div className="container my-4">
+            {isEmployer && application && (
+                <Card className="mb-4 shadow-sm border-0 bg-light">
+                    <Card.Body>
+                        <div className="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 className="mb-1 text-primary">Hồ sơ ứng tuyển</h5>
+                                <div className="text-muted">
+                                    Công việc: <strong>{application.job?.title}</strong>
+                                </div>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                                {application.status === "APPROVED" && (
+                                    <Badge bg="success" className="px-3 py-2 fs-6">Đã duyệt</Badge>
+                                )}
+                                {application.status === "REJECTED" && (
+                                    <Badge bg="danger" className="px-3 py-2 fs-6">Từ chối</Badge>
+                                )}
+                                {application.status === "PENDING" && (
+                                    <Badge bg="warning" text="dark" className="px-3 py-2 fs-6">Chờ xử lý</Badge>
+                                )}
+                            </div>
+                        </div>
+
+                        {application.status === "PENDING" && (
+                            <div className="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+                                <Button
+                                    variant="outline-danger"
+                                    onClick={() => updateApplicationStatus("REJECTED")}
+                                >
+                                    Từ chối
+                                </Button>
+                                <Button
+                                    variant="success"
+                                    onClick={() => updateApplicationStatus("ACCEPTED")}
+                                >
+                                    Duyệt ứng viên
+                                </Button>
+                            </div>
+                        )}
+                    </Card.Body>
+                </Card>
+            )}
+
+            {template}
+        </div>
+    );
 };
 
 export default CVDetail;

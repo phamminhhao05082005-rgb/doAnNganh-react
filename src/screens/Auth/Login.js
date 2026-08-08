@@ -3,7 +3,6 @@ import { Alert, Button, Form } from "react-bootstrap";
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import cookies from "react-cookies";
-
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { MyUserContext } from "../../configs/Contexts";
 import MySpinner from "../../components/MySpinner";
