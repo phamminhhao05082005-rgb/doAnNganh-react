@@ -5,6 +5,7 @@ import cookies from "react-cookies";
 import { MyUserContext } from "../configs/Contexts";
 import { Link } from "react-router-dom";
 import { authApis, endpoints } from "../configs/Apis";
+import NotificationBell from "../screens/NotificationBell";
 
 const Header = () => {
 
@@ -155,6 +156,8 @@ const Header = () => {
                         </>
 
                     }
+
+                    <NotificationBell />
 
                     <span>
 

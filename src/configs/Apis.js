@@ -81,8 +81,7 @@ export const endpoints = {
     updateApplicationStatus: (id) =>
         `/auth/employer/applications/${id}/status`,
 
-    updateApplicationStatus: (id) =>
-        `/auth/employer/applications/${id}/status`,
+    notifications: "/auth/notifications",
 
 };
 
