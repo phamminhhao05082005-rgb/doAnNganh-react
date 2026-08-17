@@ -168,6 +168,15 @@ function App() {
             />
 
             <Route
+              path="/companies/:companyId"
+              element={
+                <ProtectedRoute roles={["STUDENT", "EMPLOYER"]}>
+                  <CompanyProfile />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
               path="/employer/company/edit"
               element={
                 <ProtectedRoute
@@ -223,8 +232,17 @@ function App() {
               }
             />
 
-            <Route
+            {/* <Route
               path="/employer/jobs/:jobId/applications/:applicationId"
+              element={
+                <ProtectedRoute roles={["EMPLOYER"]}>
+                  <CVDetail />
+                </ProtectedRoute>
+              }
+            /> */}
+
+            <Route
+              path="/employer/applications/:applicationId/cv"
               element={
                 <ProtectedRoute roles={["EMPLOYER"]}>
                   <CVDetail />

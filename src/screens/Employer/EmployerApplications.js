@@ -247,9 +247,7 @@ const EmployerApplications = () => {
 
                                         <td>
 
-                                            <Link
-                                                to={`/employer/jobs/${jobId}/applications/${application.id}`}
-                                            >
+                                            <Link to={`/employer/applications/${application.id}/cv`}>
 
                                                 <Button
                                                     variant="primary"

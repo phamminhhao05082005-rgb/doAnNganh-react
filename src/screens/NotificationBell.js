@@ -25,8 +25,8 @@ const NotificationBell = () => {
         }
     };
 
-    const handleNotificationClick = (notification) => {
-        // 1. Cập nhật UI đã đọc ngay lập tức
+    const handleNotificationClick = async (notification) => {
+        // 1. Cập nhật UI tạm thời
         if (!notification.is_read) {
             setNotifications((prev) =>
                 prev.map((n) =>
@@ -35,15 +35,15 @@ const NotificationBell = () => {
             );
             setUnreadCount((prev) => Math.max(0, prev - 1));
 
-            // Gọi API cập nhật đã đọc nếu có endpoint
-            if (endpoints.markNotificationRead) {
-                authApis()
-                    .patch(endpoints.markNotificationRead(notification.id))
-                    .catch((err) => console.error("Lỗi cập nhật đã đọc", err));
+            // 2. Chờ API ghi nhận xuống Database thành công
+            try {
+                await authApis().put(endpoints.markNotificationRead(notification.id));
+            } catch (err) {
+                console.error("Lỗi cập nhật trạng thái thông báo:", err);
             }
         }
 
-        // 2. Chuyển hướng tới trang chi tiết công việc
+        // 3. Sau khi cập nhật DB xong mới điều hướng trang
         const jobId = notification.job_id || notification.job?.id;
         if (jobId) {
             navigate(`/jobs/${jobId}`);
@@ -119,7 +119,6 @@ const NotificationBell = () => {
                             <div>
                                 <strong>{notification.title}</strong>
                             </div>
-
 
                             {jobTitle && (
                                 <div className="text-primary small fw-semibold">

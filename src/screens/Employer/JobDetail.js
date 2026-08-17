@@ -343,6 +343,11 @@ const JobDetail = () => {
 
                     {user?.role === "STUDENT" && (
                         <>
+                            <Link to={`/companies/${job.company_id || job.company?.id}`}>
+                                <Button variant="info" className="text-white">
+                                    Xem thông tin công ty
+                                </Button>
+                            </Link>
 
                             {!job.applied && (
                                 <Button

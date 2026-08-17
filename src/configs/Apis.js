@@ -83,6 +83,16 @@ export const endpoints = {
 
     notifications: "/auth/notifications",
 
+    markNotificationRead: (id) => `/auth/notifications/${id}/read`,
+
+    employerCvDetail: (applicationId) => `/auth/employer/applications/${applicationId}/cv`,
+
+    getCompanyById: (id) => `/auth/companies/${id}`,
+
+    companyReviews: (companyId) => `/companies/${companyId}/reviews`,
+    addReview: "/auth/student/reviews",
+    updateReview: (id) => `/auth/student/reviews/${id}`,
+    deleteReview: (id) => `/auth/student/reviews/${id}`,
 };
 
 export const authApis = () => {
