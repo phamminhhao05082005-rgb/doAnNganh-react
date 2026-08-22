@@ -78,6 +78,9 @@ export const endpoints = {
     employerApplications: (jobId) =>
         `/auth/employer/jobs/${jobId}/applications`,
 
+    evaluateJobCvs: (jobId) =>
+        `auth/employer/jobs/${jobId}/evaluate-cvs`,
+
     updateApplicationStatus: (id) =>
         `/auth/employer/applications/${id}/status`,
 

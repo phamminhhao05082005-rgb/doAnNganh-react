@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Spinner, Button, Badge, Card } from "react-bootstrap";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
 import CVTemplate1 from "./CVTemplate1";
 import CVTemplate2 from "./CVTemplate2";
@@ -18,9 +18,13 @@ const CVDetail = () => {
     const [cv, setCV] = useState(null);
     const [application, setApplication] = useState(null);
 
-    // Xác định xem có phải Employer đang xem theo applicationId hay không
     const isEmployer = !!applicationId;
-    const editable = !isEmployer; // Employer chỉ được xem, không thể chỉnh sửa
+    const editable = !isEmployer;
+
+    // Helper kiểm tra chính xác dữ liệu trả về là Application
+    const isApplicationObject = (data) => {
+        return Boolean(data && (data.cv || data.job || data.job_id || data.student_id));
+    };
 
     // 1. Tải CV dành cho Student
     const loadStudentCV = async (showLoading = true) => {
@@ -36,27 +40,49 @@ const CVDetail = () => {
         }
     };
 
-    // 2. Tải Chi tiết Hồ sơ Ứng tuyển & CV dành cho Employer
+    // 2. Tải Application (cho Employer) & Fetch chi tiết CV
     const loadEmployerApplication = async () => {
         try {
             setLoading(true);
-            // Gọi trực tiếp API detail thông qua applicationId
             const res = await authApis().get(
                 endpoints.employerCvDetail(applicationId)
             );
 
-            const appData = res.data.data || res.data;
+            const resData = res.data.data || res.data;
 
-            if (!appData) {
-                toast.error("Không tìm thấy hồ sơ ứng tuyển");
+            if (!resData) {
+                toast.error("Không tìm thấy dữ liệu");
                 setApplication(null);
                 setCV(null);
                 return;
             }
 
-            setApplication(appData);
-            // Lấy thông tin CV đính kèm trong đơn ứng tuyển
-            setCV(appData.cv || appData.studentCv || appData);
+            // Phân biệt chính xác Application vs CV
+            if (isApplicationObject(resData)) {
+                const appStatus = String(resData.status || "PENDING").toUpperCase();
+                setApplication({
+                    ...resData,
+                    status: appStatus,
+                });
+
+                const targetCv = resData.cv || resData;
+                const cvId = targetCv?.id || id;
+
+                // Tải bổ sung chi tiết Educations/Experiences nếu đối tượng CV thiếu thông tin này
+                if (cvId && targetCv && !targetCv.educations) {
+                    try {
+                        const cvRes = await authApis().get(endpoints.cv(cvId));
+                        setCV(cvRes.data.data || cvRes.data);
+                    } catch (cvErr) {
+                        setCV(targetCv);
+                    }
+                } else {
+                    setCV(targetCv);
+                }
+            } else {
+                setCV(resData);
+                setApplication(null);
+            }
         } catch (err) {
             console.error(err);
             toast.error(
@@ -75,7 +101,7 @@ const CVDetail = () => {
         }
     }, [id, applicationId]);
 
-    // Cập nhật thông tin CV (Chỉ dùng cho Student)
+    // 3. Cập nhật CV (Tối ưu hiệu năng bằng Promise.all)
     const updateCV = async (data) => {
         if (!editable) return;
 
@@ -88,31 +114,39 @@ const CVDetail = () => {
                 ...cvData
             } = data;
 
+            // Cập nhật thông tin chung CV
             await authApis().put(endpoints.cv(id), cvData);
 
+            const requests = [];
+
+            // Xử lý Học vấn (Educations)
             for (const edu of educations || []) {
                 if (edu.id) {
-                    await authApis().put(endpoints.cvEducation(id, edu.id), edu);
+                    requests.push(authApis().put(endpoints.cvEducation(id, edu.id), edu));
                 } else {
-                    await authApis().post(endpoints.cvEducations(id), edu);
+                    requests.push(authApis().post(endpoints.cvEducations(id), edu));
                 }
             }
 
             for (const eduId of deletedEducationIds || []) {
-                await authApis().delete(endpoints.cvEducation(id, eduId));
+                requests.push(authApis().delete(endpoints.cvEducation(id, eduId)));
             }
 
+            // Xử lý Kinh nghiệm (Experiences)
             for (const exp of experiences || []) {
                 if (exp.id) {
-                    await authApis().put(endpoints.cvExperience(id, exp.id), exp);
+                    requests.push(authApis().put(endpoints.cvExperience(id, exp.id), exp));
                 } else {
-                    await authApis().post(endpoints.cvExperiences(id), exp);
+                    requests.push(authApis().post(endpoints.cvExperiences(id), exp));
                 }
             }
 
             for (const expId of deletedExperienceIds || []) {
-                await authApis().delete(endpoints.cvExperience(id, expId));
+                requests.push(authApis().delete(endpoints.cvExperience(id, expId)));
             }
+
+            // Gửi toàn bộ API đồng thời
+            await Promise.all(requests);
 
             await loadStudentCV(false);
             toast.success("Lưu CV thành công!");
@@ -122,9 +156,9 @@ const CVDetail = () => {
         }
     };
 
-    // Duyệt / Từ chối hồ sơ (Dành cho Employer)
+    // 4. Duyệt / Từ chối application
     const updateApplicationStatus = async (status) => {
-        if (!application) return;
+        if (!application?.id) return;
 
         try {
             const res = await authApis().put(
@@ -132,16 +166,17 @@ const CVDetail = () => {
                 { status }
             );
 
-            const updatedStatus = res.data.data?.status || status;
+            const rawStatus = res.data.data?.status || status;
+            const updatedStatus = String(rawStatus).toUpperCase();
 
             setApplication((prev) => ({
                 ...prev,
                 status: updatedStatus,
             }));
 
-            if (updatedStatus === "ACCEPTED" || updatedStatus === "APPROVED") {
+            if (["ACCEPTED", "APPROVED"].includes(updatedStatus)) {
                 toast.success("Đã duyệt ứng viên");
-            } else if (updatedStatus === "REJECTED") {
+            } else if (["REJECTED", "REJECT"].includes(updatedStatus)) {
                 toast.success("Đã từ chối ứng viên");
             }
         } catch (err) {
@@ -150,6 +185,18 @@ const CVDetail = () => {
                 err.response?.data?.message || "Không thể cập nhật trạng thái"
             );
         }
+    };
+
+    // Helper hiển thị Badge trạng thái an toàn
+    const renderStatusBadge = (status) => {
+        const uppercaseStatus = String(status || "").toUpperCase();
+        if (["APPROVED", "ACCEPTED"].includes(uppercaseStatus)) {
+            return <Badge bg="success" className="px-3 py-2 fs-6">Đã duyệt</Badge>;
+        }
+        if (["REJECTED", "REJECT"].includes(uppercaseStatus)) {
+            return <Badge bg="danger" className="px-3 py-2 fs-6">Từ chối</Badge>;
+        }
+        return <Badge bg="warning" text="dark" className="px-3 py-2 fs-6">Chờ xử lý</Badge>;
     };
 
     if (loading) {
@@ -179,7 +226,7 @@ const CVDetail = () => {
 
     const templateProps = {
         cv,
-        editable, // Bằng false khi là Employer -> Tất cả input/nút sửa trong template sẽ bị vô hiệu hóa
+        editable,
         onSave: editable ? updateCV : undefined,
         application: isEmployer ? application : null,
         onUpdateStatus: isEmployer ? updateApplicationStatus : undefined,
@@ -189,32 +236,28 @@ const CVDetail = () => {
 
     let template;
     switch (templateId) {
-        case 1:
-            template = <CVTemplate1 {...templateProps} />;
-            break;
-        case 2:
-            template = <CVTemplate2 {...templateProps} />;
-            break;
-        case 3:
-            template = <CVTemplate3 {...templateProps} />;
-            break;
-        case 4:
-            template = <CVTemplate4 {...templateProps} />;
-            break;
-        case 5:
-            template = <CVTemplate5 {...templateProps} />;
-            break;
-        case 6:
-            template = <CVTemplate6 {...templateProps} />;
-            break;
-        default:
-            template = <CVTemplate1 {...templateProps} />;
-            break;
+        case 1: template = <CVTemplate1 {...templateProps} />; break;
+        case 2: template = <CVTemplate2 {...templateProps} />; break;
+        case 3: template = <CVTemplate3 {...templateProps} />; break;
+        case 4: template = <CVTemplate4 {...templateProps} />; break;
+        case 5: template = <CVTemplate5 {...templateProps} />; break;
+        case 6: template = <CVTemplate6 {...templateProps} />; break;
+        default: template = <CVTemplate1 {...templateProps} />; break;
     }
+
+    const hasValidApplication = isApplicationObject(application);
 
     return (
         <div className="container my-4">
-            {isEmployer && application && (
+            {isEmployer && (
+                <div className="mb-3">
+                    <Button variant="outline-secondary" size="sm" onClick={() => navigate(-1)}>
+                        &larr; Quay lại
+                    </Button>
+                </div>
+            )}
+
+            {isEmployer && hasValidApplication && (
                 <Card className="mb-4 shadow-sm border-0 bg-light">
                     <Card.Body>
                         <div className="d-flex justify-content-between align-items-center">
@@ -227,37 +270,11 @@ const CVDetail = () => {
                                 )}
                             </div>
                             <div className="d-flex align-items-center gap-2">
-                                {(application.status === "APPROVED" ||
-                                    application.status === "ACCEPTED") && (
-                                    <Badge bg="success" className="px-3 py-2 fs-6">
-                                        Đã duyệt
-                                    </Badge>
-                                )}
-                                {application.status === "REJECTED" && (
-                                    <Badge bg="danger" className="px-3 py-2 fs-6">
-                                        Từ chối
-                                    </Badge>
-                                )}
-                                {application.status === "PENDING" && (
-                                    <Badge
-                                        bg="warning"
-                                        text="dark"
-                                        className="px-3 py-2 fs-6"
-                                    >
-                                        Chờ xử lý
-                                    </Badge>
-                                )}
-                                <Button
-                                    variant="outline-secondary"
-                                    size="sm"
-                                    onClick={() => navigate(-1)}
-                                >
-                                    Quay lại
-                                </Button>
+                                {renderStatusBadge(application.status)}
                             </div>
                         </div>
 
-                        {application.status === "PENDING" && (
+                        {["PENDING", "WAITING"].includes(application.status) && (
                             <div className="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
                                 <Button
                                     variant="outline-danger"

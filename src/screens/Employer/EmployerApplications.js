@@ -1,196 +1,166 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import {Card, Spinner, Button, Badge, Table} from "react-bootstrap";
+import { Card, Spinner, Button, Badge, Table, Modal, ProgressBar } from "react-bootstrap";
 import dayjs from "dayjs";
 import { authApis, endpoints } from "../../configs/Apis";
 import { toast } from "react-toastify";
 
 const EmployerApplications = () => {
-
     const { jobId } = useParams();
-
     const [applications, setApplications] = useState([]);
-
     const [loading, setLoading] = useState(true);
+    
+    // State quản lý việc gọi API AI
+    const [evaluating, setEvaluating] = useState(false);
+    const [selectedAiData, setSelectedAiData] = useState(null);
+    const [showAiModal, setShowAiModal] = useState(false);
 
     const loadApplications = async () => {
-
         try {
-
             setLoading(true);
-
             const res = await authApis().get(
                 endpoints.employerApplications(jobId)
             );
-
-            setApplications(
-                res.data.data || []
-            );
-
+            setApplications(res.data.data || []);
         } catch (err) {
-
             console.error(err);
-
             toast.error(
                 err.response?.data?.message ||
                 "Không thể tải danh sách ứng tuyển"
             );
-
         } finally {
-
             setLoading(false);
-
         }
     };
 
     useEffect(() => {
-
         loadApplications();
-
     }, [jobId]);
 
-    const getStatusBadge = (status) => {
+    // Hàm kích hoạt AI Đánh giá CV
+    const handleEvaluateAi = async (force = false) => {
+        try {
+            setEvaluating(true);
+            toast.info("AI đang phân tích danh sách CV, vui lòng chờ...");
+            
+            const res = await authApis().post(
+                endpoints.evaluateJobCvs(jobId),
+                { force }
+            );
 
-        switch (status) {
-
-            case "ACCEPTED":
-
-                return (
-                    <Badge bg="success">
-                        Đã duyệt
-                    </Badge>
-                );
-
-            case "REJECTED":
-
-                return (
-                    <Badge bg="danger">
-                        Từ chối
-                    </Badge>
-                );
-
-            default:
-
-                return (
-                    <Badge bg="warning" text="dark">
-                        Chờ xử lý
-                    </Badge>
-                );
-
+            setApplications(res.data.data || []);
+            toast.success("Đánh giá CV bằng AI hoàn tất!");
+        } catch (err) {
+            console.error(err);
+            toast.error(
+                err.response?.data?.message || "Lỗi trong quá trình AI đánh giá"
+            );
+        } finally {
+            setEvaluating(false);
         }
+    };
 
+    // Hàm mở Popup xem chi tiết kết quả AI
+    const handleOpenAiDetails = (app) => {
+        if (!app.ai_evaluation) {
+            toast.warning("Hồ sơ này chưa có kết quả đánh giá AI.");
+            return;
+        }
+        setSelectedAiData({
+            candidateName: app.cv?.full_name,
+            score: app.ai_score,
+            evaluation: app.ai_evaluation
+        });
+        setShowAiModal(true);
+    };
+
+    const getStatusBadge = (status) => {
+        switch (status) {
+            case "ACCEPTED":
+                return <Badge bg="success">Đã duyệt</Badge>;
+            case "REJECTED":
+                return <Badge bg="danger">Từ chối</Badge>;
+            default:
+                return <Badge bg="warning" text="dark">Chờ xử lý</Badge>;
+        }
+    };
+
+    // Render Badge điểm số AI
+    const getScoreBadge = (score) => {
+        if (score === null || score === undefined) {
+            return <Badge bg="secondary">Chưa lọc</Badge>;
+        }
+        if (score >= 80) return <Badge bg="success">{score}/100 - Rất phù hợp</Badge>;
+        if (score >= 50) return <Badge bg="warning" text="dark">{score}/100 - Khá</Badge>;
+        return <Badge bg="danger">{score}/100 - Thấp</Badge>;
     };
 
     if (loading) {
-
         return (
             <div className="text-center mt-5">
-
-                <Spinner />
-
+                <Spinner animation="border" />
             </div>
         );
-
     }
 
     return (
+        <>
+            <Card className="mt-4">
+                <Card.Header className="d-flex justify-content-between align-items-center">
+                    <h4 className="mb-0">Danh sách ứng tuyển</h4>
+                    
+                    <div className="d-flex gap-2">
+                        {/* NÚT LỌC BẰNG AI */}
+                        <Button 
+                            variant="purple" 
+                            style={{ backgroundColor: "#6f42c1", color: "#fff" }}
+                            onClick={() => handleEvaluateAi(false)}
+                            disabled={evaluating || applications.length === 0}
+                        >
+                            {evaluating ? (
+                                <>
+                                    <Spinner size="sm" className="me-2" />
+                                    AI Đang Phân Tích...
+                                </>
+                            ) : (
+                                "✨ Lọc CV bằng AI"
+                            )}
+                        </Button>
 
-        <Card className="mt-4">
-
-            <Card.Header className="d-flex justify-content-between align-items-center">
-
-                <h4 className="mb-0">
-                    Danh sách ứng tuyển
-                </h4>
-
-                <Link to={`/employer/jobs/${jobId}`}>
-
-                    <Button variant="secondary">
-                        Quay lại
-                    </Button>
-
-                </Link>
-
-            </Card.Header>
-
-            <Card.Body>
-
-                {applications.length === 0 ? (
-
-                    <div className="text-center py-5">
-
-                        <h5>
-                            Chưa có ứng viên nào
-                        </h5>
-
-                        <p className="text-muted">
-                            Hiện tại chưa có ứng viên ứng tuyển vào công việc này.
-                        </p>
-
+                        <Link to={`/employer/jobs/${jobId}`}>
+                            <Button variant="secondary">Quay lại</Button>
+                        </Link>
                     </div>
+                </Card.Header>
 
-                ) : (
-
-                    <Table
-                        responsive
-                        bordered
-                        hover
-                        className="align-middle"
-                    >
-
-                        <thead>
-
-                            <tr>
-
-                                <th>
-                                    #
-                                </th>
-
-                                <th>
-                                    Ứng viên
-                                </th>
-
-                                <th>
-                                    Vị trí
-                                </th>
-
-                                <th>
-                                    Kinh nghiệm
-                                </th>
-
-                                <th>
-                                    Ngày ứng tuyển
-                                </th>
-
-                                <th>
-                                    Trạng thái
-                                </th>
-
-                                <th>
-                                    Thao tác
-                                </th>
-
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            {applications.map(
-                                (application, index) => (
-
+                <Card.Body>
+                    {applications.length === 0 ? (
+                        <div className="text-center py-5">
+                            <h5>Chưa có ứng viên nào</h5>
+                            <p className="text-muted">
+                                Hiện tại chưa có ứng viên ứng tuyển vào công việc này.
+                            </p>
+                        </div>
+                    ) : (
+                        <Table responsive bordered hover className="align-middle">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ứng viên</th>
+                                    <th>Vị trí</th>
+                                    <th>Kinh nghiệm</th>
+                                    <th>Điểm Phù Hợp (AI)</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {applications.map((application, index) => (
                                     <tr key={application.id}>
-
+                                        <td>{index + 1}</td>
                                         <td>
-                                            {index + 1}
-                                        </td>
-
-                                        <td>
-
                                             <div className="d-flex align-items-center gap-2">
-
                                                 {application.cv?.avatar && (
-
                                                     <img
                                                         src={application.cv.avatar}
                                                         alt="avatar"
@@ -201,82 +171,117 @@ const EmployerApplications = () => {
                                                             borderRadius: "50%"
                                                         }}
                                                     />
-
                                                 )}
-
                                                 <div>
-
                                                     <div className="fw-bold">
                                                         {application.cv?.full_name}
                                                     </div>
-
                                                     <small className="text-muted">
                                                         {application.cv?.email}
                                                     </small>
-
                                                 </div>
-
                                             </div>
-
+                                        </td>
+                                        <td>{application.cv?.job_title || "—"}</td>
+                                        <td>{application.cv?.experience_year ?? 0} năm</td>
+                                        
+                                        {/* CỘT HIỂN THỊ ĐIỂM AI */}
+                                        <td>
+                                            <div className="d-flex align-items-center gap-2">
+                                                {getScoreBadge(application.ai_score)}
+                                                {application.ai_evaluation && (
+                                                    <Button 
+                                                        variant="outline-info" 
+                                                        size="sm"
+                                                        onClick={() => handleOpenAiDetails(application)}
+                                                    >
+                                                        Chi tiết
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </td>
 
+                                        <td>{getStatusBadge(application.status)}</td>
                                         <td>
-                                            {application.cv?.job_title || "—"}
-                                        </td>
-
-                                        <td>
-                                            {application.cv?.experience_year ?? 0} năm
-                                        </td>
-
-                                        <td>
-
-                                            {application.applied_at
-                                                ? dayjs(application.applied_at)
-                                                    .format("DD/MM/YYYY HH:mm")
-                                                : "—"}
-
-                                        </td>
-
-                                        <td>
-
-                                            {getStatusBadge(
-                                                application.status
-                                            )}
-
-                                        </td>
-
-                                        <td>
-
                                             <Link to={`/employer/applications/${application.id}/cv`}>
-
-                                                <Button
-                                                    variant="primary"
-                                                    size="sm"
-                                                >
+                                                <Button variant="primary" size="sm">
                                                     Xem CV
                                                 </Button>
-
                                             </Link>
-
                                         </td>
-
                                     </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                    )}
+                </Card.Body>
+            </Card>
 
-                                )
-                            )}
+            {/* POPUP KHUNG HIỂN THỊ KẾT QUẢ AI CHI TIẾT */}
+            <Modal show={showAiModal} onHide={() => setShowAiModal(false)} size="lg" centered>
+                <Modal.Header closeButton className="bg-light">
+                    <Modal.Title className="h5">
+                        🤖 Kết quả đánh giá AI: <span className="text-primary">{selectedAiData?.candidateName}</span>
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    {selectedAiData && (
+                        <div>
+                            {/* Thanh điểm số */}
+                            <div className="mb-4 text-center">
+                                <h6 className="mb-1 fw-bold">Mức độ phù hợp công việc</h6>
+                                <div className="display-6 fw-bold text-primary mb-2">
+                                    {selectedAiData.score}%
+                                </div>
+                                <ProgressBar 
+                                    now={selectedAiData.score} 
+                                    variant={selectedAiData.score >= 80 ? "success" : selectedAiData.score >= 50 ? "warning" : "danger"} 
+                                    style={{ height: "10px" }}
+                                />
+                            </div>
 
-                        </tbody>
+                            {/* Tóm tắt */}
+                            <div className="p-3 bg-light rounded mb-3">
+                                <h6>📌 **Nhận xét chung:**</h6>
+                                <p className="mb-0 text-dark">{selectedAiData.evaluation?.summary}</p>
+                            </div>
 
-                    </Table>
+                            <div className="row">
+                                
+                                <div className="col-md-6">
+                                    <div className="p-3 border border-success rounded h-100">
+                                        <h6 className="text-success fw-bold">✅ Điểm mạnh Phù hợp:</h6>
+                                        <ul className="mb-0 ps-3">
+                                            {selectedAiData.evaluation?.strengths?.map((item, idx) => (
+                                                <li key={idx} className="mb-1">{item}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
 
-                )}
-
-            </Card.Body>
-
-        </Card>
-
+                               
+                                <div className="col-md-6">
+                                    <div className="p-3 border border-danger rounded h-100">
+                                        <h6 className="text-danger fw-bold">⚠️ Điểm hạn chế / Còn thiếu:</h6>
+                                        <ul className="mb-0 ps-3">
+                                            {selectedAiData.evaluation?.weaknesses?.map((item, idx) => (
+                                                <li key={idx} className="mb-1">{item}</li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowAiModal(false)}>
+                        Đóng
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </>
     );
-
 };
 
 export default EmployerApplications;
