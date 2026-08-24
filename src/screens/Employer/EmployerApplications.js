@@ -1,7 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Card, Spinner, Button, Badge, Table, Modal, ProgressBar } from "react-bootstrap";
-import dayjs from "dayjs";
+import {
+    Card,
+    Spinner,
+    Button,
+    Badge,
+    Table,
+    Modal,
+    ProgressBar,
+    Pagination
+} from "react-bootstrap";
 import { authApis, endpoints } from "../../configs/Apis";
 import { toast } from "react-toastify";
 
@@ -9,19 +17,34 @@ const EmployerApplications = () => {
     const { jobId } = useParams();
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
+    // State quản lý phân trang
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [perPage, setPerPage] = useState(10);
+
     // State quản lý việc gọi API AI
     const [evaluating, setEvaluating] = useState(false);
     const [selectedAiData, setSelectedAiData] = useState(null);
     const [showAiModal, setShowAiModal] = useState(false);
 
-    const loadApplications = async () => {
+    const loadApplications = async (page = 1) => {
         try {
             setLoading(true);
             const res = await authApis().get(
-                endpoints.employerApplications(jobId)
+                `${endpoints.employerApplications(jobId)}?page=${page}`
             );
-            setApplications(res.data.data || []);
+
+            // Tùy theo cấu trúc response pagination của Laravel API:
+            // - Nếu dạng API Resource mặc định: res.data.data là mảng, res.data.meta là thông tin phân trang
+            // - Nếu dạng Laravel Paginate trực tiếp: res.data.data.data là mảng, res.data.data.last_page là tổng số trang
+            const items = res.data.data || [];
+            const meta = res.data.meta || res.data;
+
+            setApplications(items);
+            setCurrentPage(meta.current_page || page);
+            setTotalPages(meta.last_page || 1);
+            if (meta.per_page) setPerPage(meta.per_page);
         } catch (err) {
             console.error(err);
             toast.error(
@@ -34,22 +57,29 @@ const EmployerApplications = () => {
     };
 
     useEffect(() => {
-        loadApplications();
-    }, [jobId]);
+        loadApplications(currentPage);
+    }, [jobId, currentPage]);
+
+    const handlePageChange = (pageNumber) => {
+        if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
+            setCurrentPage(pageNumber);
+        }
+    };
 
     // Hàm kích hoạt AI Đánh giá CV
     const handleEvaluateAi = async (force = false) => {
         try {
             setEvaluating(true);
             toast.info("AI đang phân tích danh sách CV, vui lòng chờ...");
-            
-            const res = await authApis().post(
+
+            await authApis().post(
                 endpoints.evaluateJobCvs(jobId),
                 { force }
             );
 
-            setApplications(res.data.data || []);
             toast.success("Đánh giá CV bằng AI hoàn tất!");
+            // Sau khi AI đánh giá xong, tải lại trang hiện tại để nhận dữ liệu mới
+            loadApplications(currentPage);
         } catch (err) {
             console.error(err);
             toast.error(
@@ -66,10 +96,21 @@ const EmployerApplications = () => {
             toast.warning("Hồ sơ này chưa có kết quả đánh giá AI.");
             return;
         }
+
+        // Kiểm tra xem ai_evaluation có đang là chuỗi JSON hay không
+        let parsedEvaluation = app.ai_evaluation;
+        if (typeof app.ai_evaluation === "string") {
+            try {
+                parsedEvaluation = JSON.parse(app.ai_evaluation);
+            } catch (e) {
+                console.error("Lỗi parse AI evaluation:", e);
+            }
+        }
+
         setSelectedAiData({
             candidateName: app.cv?.full_name,
             score: app.ai_score,
-            evaluation: app.ai_evaluation
+            evaluation: parsedEvaluation
         });
         setShowAiModal(true);
     };
@@ -108,11 +149,11 @@ const EmployerApplications = () => {
             <Card className="mt-4">
                 <Card.Header className="d-flex justify-content-between align-items-center">
                     <h4 className="mb-0">Danh sách ứng tuyển</h4>
-                    
+
                     <div className="d-flex gap-2">
                         {/* NÚT LỌC BẰNG AI */}
-                        <Button 
-                            variant="purple" 
+                        <Button
+                            variant="purple"
                             style={{ backgroundColor: "#6f42c1", color: "#fff" }}
                             onClick={() => handleEvaluateAi(false)}
                             disabled={evaluating || applications.length === 0}
@@ -142,77 +183,117 @@ const EmployerApplications = () => {
                             </p>
                         </div>
                     ) : (
-                        <Table responsive bordered hover className="align-middle">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Ứng viên</th>
-                                    <th>Vị trí</th>
-                                    <th>Kinh nghiệm</th>
-                                    <th>Điểm Phù Hợp (AI)</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {applications.map((application, index) => (
-                                    <tr key={application.id}>
-                                        <td>{index + 1}</td>
-                                        <td>
-                                            <div className="d-flex align-items-center gap-2">
-                                                {application.cv?.avatar && (
-                                                    <img
-                                                        src={application.cv.avatar}
-                                                        alt="avatar"
-                                                        width="45"
-                                                        height="45"
-                                                        style={{
-                                                            objectFit: "cover",
-                                                            borderRadius: "50%"
-                                                        }}
-                                                    />
-                                                )}
-                                                <div>
-                                                    <div className="fw-bold">
-                                                        {application.cv?.full_name}
-                                                    </div>
-                                                    <small className="text-muted">
-                                                        {application.cv?.email}
-                                                    </small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>{application.cv?.job_title || "—"}</td>
-                                        <td>{application.cv?.experience_year ?? 0} năm</td>
-                                        
-                                        {/* CỘT HIỂN THỊ ĐIỂM AI */}
-                                        <td>
-                                            <div className="d-flex align-items-center gap-2">
-                                                {getScoreBadge(application.ai_score)}
-                                                {application.ai_evaluation && (
-                                                    <Button 
-                                                        variant="outline-info" 
-                                                        size="sm"
-                                                        onClick={() => handleOpenAiDetails(application)}
-                                                    >
-                                                        Chi tiết
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </td>
-
-                                        <td>{getStatusBadge(application.status)}</td>
-                                        <td>
-                                            <Link to={`/employer/applications/${application.id}/cv`}>
-                                                <Button variant="primary" size="sm">
-                                                    Xem CV
-                                                </Button>
-                                            </Link>
-                                        </td>
+                        <>
+                            <Table responsive bordered hover className="align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Ứng viên</th>
+                                        <th>Vị trí</th>
+                                        <th>Kinh nghiệm</th>
+                                        <th>Điểm Phù Hợp (AI)</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                                </thead>
+                                <tbody>
+                                    {applications.map((application, index) => (
+                                        <tr key={application.id}>
+                                            <td>{(currentPage - 1) * perPage + index + 1}</td>
+                                            <td>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    {application.cv?.avatar && (
+                                                        <img
+                                                            src={application.cv.avatar}
+                                                            alt="avatar"
+                                                            width="45"
+                                                            height="45"
+                                                            style={{
+                                                                objectFit: "cover",
+                                                                borderRadius: "50%"
+                                                            }}
+                                                        />
+                                                    )}
+                                                    <div>
+                                                        <div className="fw-bold">
+                                                            {application.cv?.full_name}
+                                                        </div>
+                                                        <small className="text-muted">
+                                                            {application.cv?.email}
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{application.cv?.job_title || "—"}</td>
+                                            <td>{application.cv?.experience_year ?? 0} năm</td>
+
+                                            {/* CỘT HIỂN THỊ ĐIỂM AI */}
+                                            <td>
+                                                <div className="d-flex align-items-center gap-2">
+                                                    {getScoreBadge(application.ai_score)}
+                                                    {application.ai_evaluation && (
+                                                        <Button
+                                                            variant="outline-info"
+                                                            size="sm"
+                                                            onClick={() => handleOpenAiDetails(application)}
+                                                        >
+                                                            Chi tiết
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </td>
+
+                                            <td>{getStatusBadge(application.status)}</td>
+                                            <td>
+                                                <Link to={`/employer/applications/${application.id}/cv`}>
+                                                    <Button variant="primary" size="sm">
+                                                        Xem CV
+                                                    </Button>
+                                                </Link>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
+
+                            {/* THANH PHÂN TRANG */}
+                            {totalPages > 1 && (
+                                <div className="d-flex justify-content-center mt-4">
+                                    <Pagination>
+                                        <Pagination.First
+                                            onClick={() => handlePageChange(1)}
+                                            disabled={currentPage === 1}
+                                        />
+                                        <Pagination.Prev
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                        />
+
+                                        {[...Array(totalPages)].map((_, idx) => {
+                                            const page = idx + 1;
+                                            return (
+                                                <Pagination.Item
+                                                    key={page}
+                                                    active={page === currentPage}
+                                                    onClick={() => handlePageChange(page)}
+                                                >
+                                                    {page}
+                                                </Pagination.Item>
+                                            );
+                                        })}
+
+                                        <Pagination.Next
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                        />
+                                        <Pagination.Last
+                                            onClick={() => handlePageChange(totalPages)}
+                                            disabled={currentPage === totalPages}
+                                        />
+                                    </Pagination>
+                                </div>
+                            )}
+                        </>
                     )}
                 </Card.Body>
             </Card>
@@ -233,21 +314,20 @@ const EmployerApplications = () => {
                                 <div className="display-6 fw-bold text-primary mb-2">
                                     {selectedAiData.score}%
                                 </div>
-                                <ProgressBar 
-                                    now={selectedAiData.score} 
-                                    variant={selectedAiData.score >= 80 ? "success" : selectedAiData.score >= 50 ? "warning" : "danger"} 
+                                <ProgressBar
+                                    now={selectedAiData.score}
+                                    variant={selectedAiData.score >= 80 ? "success" : selectedAiData.score >= 50 ? "warning" : "danger"}
                                     style={{ height: "10px" }}
                                 />
                             </div>
 
                             {/* Tóm tắt */}
                             <div className="p-3 bg-light rounded mb-3">
-                                <h6>📌 **Nhận xét chung:**</h6>
+                                <h6>📌 Nhận xét chung:</h6>
                                 <p className="mb-0 text-dark">{selectedAiData.evaluation?.summary}</p>
                             </div>
 
                             <div className="row">
-                                
                                 <div className="col-md-6">
                                     <div className="p-3 border border-success rounded h-100">
                                         <h6 className="text-success fw-bold">✅ Điểm mạnh Phù hợp:</h6>
@@ -259,7 +339,6 @@ const EmployerApplications = () => {
                                     </div>
                                 </div>
 
-                               
                                 <div className="col-md-6">
                                     <div className="p-3 border border-danger rounded h-100">
                                         <h6 className="text-danger fw-bold">⚠️ Điểm hạn chế / Còn thiếu:</h6>
