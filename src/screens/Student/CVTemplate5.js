@@ -11,7 +11,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
-const CVTemplate5 = ({ cv, onSave }) => {
+const CVTemplate5 = ({ cv, onSave, editable = true }) => {
     const [form, setForm] = useState({});
     const [educations, setEducations] = useState([]);
     const [experiences, setExperiences] = useState([]);
@@ -146,12 +146,14 @@ const CVTemplate5 = ({ cv, onSave }) => {
         <div>
             {!isExporting && (
                 <div className="text-end mb-3">
-                    <Button variant="primary" className="me-2" onClick={exportPDF}>
+                    <Button variant="primary" className={editable ? "me-2" : ""} onClick={exportPDF}>
                         Xuất PDF
                     </Button>
-                    <Button variant="success" onClick={save}>
-                        Lưu CV
-                    </Button>
+                    {editable && (
+                        <Button variant="success" onClick={save}>
+                            Lưu CV
+                        </Button>
+                    )}
                 </div>
             )}
 
@@ -159,7 +161,7 @@ const CVTemplate5 = ({ cv, onSave }) => {
                 <Card className="shadow-lg border-0" style={{ minHeight: "100vh" }}>
                     <Row className="g-0">
                         <Col md={8} xs={8} className="p-4 bg-white">
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div className="mb-4 pb-3 border-bottom">
                                     <h1 className="fw-bold text-dark mb-0">{form.full_name || "Họ và tên"}</h1>
                                     <p className="text-success fw-semibold fs-5 mb-2">{form.job_title || "Vị trí ứng tuyển"}</p>
@@ -198,7 +200,7 @@ const CVTemplate5 = ({ cv, onSave }) => {
                             )}
 
                             <h5 className="fw-bold text-success text-uppercase mb-3">Tóm tắt sự nghiệp</h5>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <p style={{ whiteSpace: "pre-line" }} className="text-secondary fs-6 mb-4">
                                     {form.summary || "Chưa cập nhật"}
                                 </p>
@@ -214,7 +216,7 @@ const CVTemplate5 = ({ cv, onSave }) => {
                             )}
 
                             <h5 className="fw-bold text-success text-uppercase mb-3">Kinh nghiệm làm việc</h5>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div className="mb-4">
                                     {experiences.map((exp, index) => (
                                         <div key={index} className="mb-4 position-relative ps-3 border-start border-2 border-success">
@@ -302,7 +304,7 @@ const CVTemplate5 = ({ cv, onSave }) => {
                             )}
 
                             <h5 className="fw-bold text-success text-uppercase mb-3">Học vấn & Bằng cấp</h5>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div>
                                     {educations.map((edu, index) => (
                                         <div key={index} className="mb-3">
@@ -412,11 +414,11 @@ const CVTemplate5 = ({ cv, onSave }) => {
 
                             <div className="mb-4">
                                 <h6 className="fw-bold text-dark border-bottom pb-2">THÔNG TIN KHÁC</h6>
-                                {isExporting ? (
+                                {!editable || isExporting ? (
                                     <div className="lh-lg fs-6 text-secondary">
                                         {form.email && <div><strong>Email:</strong><br />{form.email}</div>}
                                         {form.phone && <div><strong>Điện thoại:</strong><br />{form.phone}</div>}
-                                        {form.experience_year && <div><strong>Kinh nghiệm:</strong> {form.experience_year} năm</div>}
+                                        {form.experience_year !== undefined && <div><strong>Kinh nghiệm:</strong> {form.experience_year} năm</div>}
                                         {form.expected_salary && <div><strong>Mức lương:</strong> {form.expected_salary} VNĐ</div>}
                                     </div>
                                 ) : (

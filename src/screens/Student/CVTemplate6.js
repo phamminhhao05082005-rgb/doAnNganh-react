@@ -11,7 +11,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
-const CVTemplate6 = ({ cv, onSave }) => {
+const CVTemplate6 = ({ cv, onSave, editable = true }) => {
     const [form, setForm] = useState({});
     const [educations, setEducations] = useState([]);
     const [experiences, setExperiences] = useState([]);
@@ -146,12 +146,14 @@ const CVTemplate6 = ({ cv, onSave }) => {
         <div>
             {!isExporting && (
                 <div className="text-end mb-3">
-                    <Button variant="primary" className="me-2" onClick={exportPDF}>
+                    <Button variant="primary" className={editable ? "me-2" : ""} onClick={exportPDF}>
                         Xuất PDF
                     </Button>
-                    <Button variant="success" onClick={save}>
-                        Lưu CV
-                    </Button>
+                    {editable && (
+                        <Button variant="success" onClick={save}>
+                            Lưu CV
+                        </Button>
+                    )}
                 </div>
             )}
 
@@ -169,14 +171,14 @@ const CVTemplate6 = ({ cv, onSave }) => {
                                 border: "1px solid #ccc"
                             }}
                         />
-                        {isExporting ? (
+                        {!editable || isExporting ? (
                             <div>
                                 <h2 className="fw-bold text-uppercase mb-1">{form.full_name || "HỌ VÀ TÊN"}</h2>
                                 <h5 className="text-muted mb-2">{form.job_title || "Vị trí công việc"}</h5>
                                 <div className="d-flex justify-content-center flex-wrap gap-3 text-secondary small">
                                     {form.email && <span>Email: {form.email}</span>}
                                     {form.phone && <span>SĐT: {form.phone}</span>}
-                                    {form.experience_year && <span>Kinh nghiệm: {form.experience_year} năm</span>}
+                                    {form.experience_year !== undefined && <span>Kinh nghiệm: {form.experience_year} năm</span>}
                                     {form.expected_salary && <span>Lương: {form.expected_salary} VNĐ</span>}
                                 </div>
                             </div>
@@ -253,7 +255,7 @@ const CVTemplate6 = ({ cv, onSave }) => {
                         )}
                     </div>
 
-                    {!isExporting && (
+                    {editable && !isExporting && (
                         <Form.Group className="mb-4">
                             <Form.Label className="fw-bold">Tiêu đề CV</Form.Label>
                             <Form.Control
@@ -265,7 +267,7 @@ const CVTemplate6 = ({ cv, onSave }) => {
 
                     <div className="mb-4">
                         <h5 className="fw-bold text-dark border-bottom border-2 border-dark pb-1 text-uppercase">Mục tiêu nghề nghiệp</h5>
-                        {isExporting ? (
+                        {!editable || isExporting ? (
                             <p style={{ whiteSpace: "pre-line" }} className="text-secondary fs-6">
                                 {form.summary || "Chưa cập nhật"}
                             </p>
@@ -283,7 +285,7 @@ const CVTemplate6 = ({ cv, onSave }) => {
 
                     <div className="mb-4">
                         <h5 className="fw-bold text-dark border-bottom border-2 border-dark pb-1 text-uppercase">Kinh nghiệm thực tế</h5>
-                        {isExporting ? (
+                        {!editable || isExporting ? (
                             <div>
                                 {experiences.map((exp, index) => (
                                     <div key={index} className="mb-3">
@@ -370,7 +372,7 @@ const CVTemplate6 = ({ cv, onSave }) => {
 
                     <div className="mb-4">
                         <h5 className="fw-bold text-dark border-bottom border-2 border-dark pb-1 text-uppercase">Trình độ học vấn</h5>
-                        {isExporting ? (
+                        {!editable || isExporting ? (
                             <div>
                                 {educations.map((edu, index) => (
                                     <div key={index} className="mb-2">

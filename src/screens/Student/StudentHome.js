@@ -1,14 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { Card, Row, Col, Spinner, Badge, Button, Form, InputGroup } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
 import dayjs from "dayjs";
-import { useContext } from "react";
 import { MyUserContext } from "../../configs/Contexts";
-import StudentCVTemplates from "./StudentCVTemplates";
-import CVTemplate1 from "./CVTemplate1";
-import CVTemplate2 from "./CVTemplate2";
-import CVTemplate3 from "./CVTemplate3";
 
 const StudentHome = () => {
     const [user] = useContext(MyUserContext);
@@ -21,6 +16,10 @@ const StudentHome = () => {
 
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+
+    const [skillPage, setSkillPage] = useState(1);
+    const [hasMoreSkills, setHasMoreSkills] = useState(true);
+    const [loadingSkills, setLoadingSkills] = useState(false);
 
     const [filters, setFilters] = useState({
         keyword: "",
@@ -38,8 +37,11 @@ const StudentHome = () => {
 
     useEffect(() => {
         loadCategories();
-        loadSkills();
     }, []);
+
+    useEffect(() => {
+        loadSkills();
+    }, [skillPage]);
 
     useEffect(() => {
         if (hasMore || page === 1)
@@ -57,10 +59,33 @@ const StudentHome = () => {
 
     const loadSkills = async () => {
         try {
-            const res = await authApis().get(endpoints.skills);
-            setSkills(res.data.data || []);
+            setLoadingSkills(true);
+            const res = await authApis().get(endpoints.skills, {
+                params: { page: skillPage }
+            });
+
+            const newSkills = res.data.data || [];
+
+            if (skillPage === 1) {
+                setSkills(newSkills);
+            } else {
+                setSkills(prev => [...prev, ...newSkills]);
+            }
+
+            const currentPage = res.data.meta?.current_page || skillPage;
+            const lastPage = res.data.meta?.last_page || 1;
+
+            setHasMoreSkills(currentPage < lastPage);
         } catch (err) {
             console.error("Lỗi load kỹ năng:", err);
+        } finally {
+            setLoadingSkills(false);
+        }
+    };
+
+    const loadMoreSkills = () => {
+        if (!loadingSkills && hasMoreSkills) {
+            setSkillPage(prev => prev + 1);
         }
     };
 
@@ -101,9 +126,7 @@ const StudentHome = () => {
     };
 
     const bookmarkJob = async (jobId) => {
-
         try {
-
             await authApis().post(
                 endpoints.bookmark(jobId)
             );
@@ -122,9 +145,7 @@ const StudentHome = () => {
             alert("Đã lưu việc làm");
 
         } catch (err) {
-
             console.error(err);
-
             alert("Không thể lưu việc làm");
         }
     };
@@ -274,7 +295,7 @@ const StudentHome = () => {
                                         Kỹ năng yêu cầu
                                     </Form.Label>
 
-                                    <div className="d-flex flex-wrap gap-2">
+                                    <div className="d-flex flex-wrap gap-2 align-items-center">
 
                                         {filters.skills.length > 0 && (
                                             <div className="w-100 mb-2">
@@ -324,6 +345,23 @@ const StudentHome = () => {
                                                 </Badge>
                                             );
                                         })}
+
+                                        {hasMoreSkills && (
+                                            <Button
+                                                variant="outline-primary"
+                                                size="sm"
+                                                onClick={loadMoreSkills}
+                                                disabled={loadingSkills}
+                                                className="rounded-pill px-3"
+                                            >
+                                                {loadingSkills ? (
+                                                    <Spinner size="sm" animation="border" />
+                                                ) : (
+                                                    "+ Xem thêm kỹ năng"
+                                                )}
+                                            </Button>
+                                        )}
+
                                     </div>
                                 </Form.Group>
                             </Col>
@@ -363,8 +401,6 @@ const StudentHome = () => {
                         <Card className="h-100 shadow-sm">
 
                             <Card.Body className="d-flex flex-column">
-
-
 
                                 <div className="d-flex justify-content-between align-items-start mb-2">
 

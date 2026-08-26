@@ -11,7 +11,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
-const CVTemplate4 = ({ cv, onSave }) => {
+const CVTemplate4 = ({ cv, onSave, editable = true }) => {
     const [form, setForm] = useState({});
     const [educations, setEducations] = useState([]);
     const [experiences, setExperiences] = useState([]);
@@ -146,12 +146,14 @@ const CVTemplate4 = ({ cv, onSave }) => {
         <div>
             {!isExporting && (
                 <div className="text-end mb-3">
-                    <Button variant="primary" className="me-2" onClick={exportPDF}>
+                    <Button variant="primary" className={editable ? "me-2" : ""} onClick={exportPDF}>
                         Xuất PDF
                     </Button>
-                    <Button variant="success" onClick={save}>
-                        Lưu CV
-                    </Button>
+                    {editable && (
+                        <Button variant="success" onClick={save}>
+                            Lưu CV
+                        </Button>
+                    )}
                 </div>
             )}
 
@@ -172,7 +174,7 @@ const CVTemplate4 = ({ cv, onSave }) => {
                                 />
                             </Col>
                             <Col md={9} xs={9}>
-                                {isExporting ? (
+                                {!editable || isExporting ? (
                                     <div>
                                         <h1 className="fw-bold mb-1 text-uppercase" style={{ letterSpacing: "1px" }}>{form.full_name || "Họ và tên"}</h1>
                                         <h5 className="text-info fw-normal mb-3">{form.job_title || "Vị trí ứng tuyển"}</h5>
@@ -253,7 +255,7 @@ const CVTemplate4 = ({ cv, onSave }) => {
                     </div>
 
                     <div className="p-4 bg-white">
-                        {isExporting ? (
+                        {!editable || isExporting ? (
                             <div className="mb-4">
                                 <h3 className="fw-bold text-dark border-start border-4 border-info ps-3">{form.title || "HỒ SƠ NĂNG LỰC"}</h3>
                             </div>
@@ -269,7 +271,7 @@ const CVTemplate4 = ({ cv, onSave }) => {
 
                         <div className="mb-4">
                             <h5 className="fw-bold text-uppercase border-bottom pb-2 text-primary">Giới thiệu bản thân</h5>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <p style={{ whiteSpace: "pre-line" }} className="text-secondary fs-6 leading-relaxed">
                                     {form.summary || "Chưa cập nhật"}
                                 </p>
@@ -288,7 +290,7 @@ const CVTemplate4 = ({ cv, onSave }) => {
                         <Row>
                             <Col md={6} xs={6}>
                                 <h5 className="fw-bold text-uppercase border-bottom pb-2 text-primary">Học vấn</h5>
-                                {isExporting ? (
+                                {!editable || isExporting ? (
                                     <div>
                                         {educations.map((edu, index) => (
                                             <div key={index} className="mb-3 p-3 bg-light rounded border-start border-3 border-primary">
@@ -382,7 +384,7 @@ const CVTemplate4 = ({ cv, onSave }) => {
 
                             <Col md={6} xs={6}>
                                 <h5 className="fw-bold text-uppercase border-bottom pb-2 text-primary">Kinh nghiệm làm việc</h5>
-                                {isExporting ? (
+                                {!editable || isExporting ? (
                                     <div>
                                         {experiences.map((exp, index) => (
                                             <div key={index} className="mb-3 p-3 bg-light rounded border-start border-3 border-info">

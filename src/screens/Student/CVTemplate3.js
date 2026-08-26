@@ -11,7 +11,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import dayjs from "dayjs";
 
-const CVTemplate3 = ({ cv, onSave }) => {
+const CVTemplate3 = ({ cv, onSave, editable = true }) => {
     const [form, setForm] = useState({});
     const [educations, setEducations] = useState([]);
     const [experiences, setExperiences] = useState([]);
@@ -146,19 +146,20 @@ const CVTemplate3 = ({ cv, onSave }) => {
         <div>
             {!isExporting && (
                 <div className="text-end mb-3">
-                    <Button variant="primary" className="me-2" onClick={exportPDF}>
+                    <Button variant="primary" className={editable ? "me-2" : ""} onClick={exportPDF}>
                         Xuất PDF
                     </Button>
-                    <Button variant="success" onClick={save}>
-                        Lưu CV
-                    </Button>
+                    {editable && (
+                        <Button variant="success" onClick={save}>
+                            Lưu CV
+                        </Button>
+                    )}
                 </div>
             )}
 
             <div ref={cvRef} style={{ background: "#ffffff", padding: isExporting ? "20px" : "0" }}>
                 <Card className="shadow-lg border-0" style={{ minHeight: "100vh" }}>
                     
-                    {/* TOP HEADER SECTION */}
                     <div className="bg-dark text-white p-4">
                         <Row className="align-items-center">
                             <Col md={3} xs={4} className="text-center">
@@ -174,7 +175,7 @@ const CVTemplate3 = ({ cv, onSave }) => {
                                 />
                             </Col>
                             <Col md={9} xs={8}>
-                                {isExporting ? (
+                                {!editable || isExporting ? (
                                     <div>
                                         <h2 className="fw-bold mb-1 text-uppercase">{form.full_name || "Họ và tên"}</h2>
                                         <h5 className="text-info opacity-100 mb-3">{form.job_title || "Vị trí ứng tuyển"}</h5>
@@ -260,9 +261,8 @@ const CVTemplate3 = ({ cv, onSave }) => {
                         </Row>
                     </div>
 
-                    {/* MAIN CONTENT BODY */}
                     <div className="p-4 bg-white">
-                        {isExporting ? (
+                        {!editable || isExporting ? (
                             <div className="mb-4">
                                 <h3 className="fw-bold text-primary border-bottom pb-2">{form.title || "HỒ SƠ NĂNG LỰC"}</h3>
                             </div>
@@ -276,10 +276,9 @@ const CVTemplate3 = ({ cv, onSave }) => {
                             </Form.Group>
                         )}
 
-                        {/* GIỚI THIỆU */}
                         <div className="mb-4">
                             <h4 className="fw-bold border-bottom pb-2 text-dark">GIỚI THIỆU</h4>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <p style={{ whiteSpace: "pre-line" }} className="text-secondary fs-6">
                                     {form.summary || "Chưa cập nhật"}
                                 </p>
@@ -295,10 +294,9 @@ const CVTemplate3 = ({ cv, onSave }) => {
                             )}
                         </div>
 
-                        {/* HỌC VẤN */}
                         <div className="mb-4">
                             <h4 className="fw-bold border-bottom pb-2 text-dark">HỌC VẤN</h4>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div>
                                     {educations.map((edu, index) => (
                                         <div key={index} className="mb-3">
@@ -394,10 +392,9 @@ const CVTemplate3 = ({ cv, onSave }) => {
                             )}
                         </div>
 
-                        {/* KINH NGHIỆM LÀM VIỆC */}
                         <div className="mb-4">
                             <h4 className="fw-bold border-bottom pb-2 text-dark">KINH NGHIỆM LÀM VIỆC</h4>
-                            {isExporting ? (
+                            {!editable || isExporting ? (
                                 <div>
                                     {experiences.map((exp, index) => (
                                         <div key={index} className="mb-3">
