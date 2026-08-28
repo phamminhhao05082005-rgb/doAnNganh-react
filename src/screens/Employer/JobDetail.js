@@ -111,6 +111,11 @@ const JobDetail = () => {
 
             setShowApply(false);
 
+            setJob({
+                ...job,
+                applied: true
+            });
+
         } catch (err) {
 
             console.error(err);

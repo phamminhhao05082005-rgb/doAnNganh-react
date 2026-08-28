@@ -96,6 +96,8 @@ export const endpoints = {
     addReview: "/auth/student/reviews",
     updateReview: (id) => `/auth/student/reviews/${id}`,
     deleteReview: (id) => `/auth/student/reviews/${id}`,
+
+    employerStatistics: "/auth/employer/statistics",
 };
 
 export const authApis = () => {
