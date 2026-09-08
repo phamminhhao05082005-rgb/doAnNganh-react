@@ -21,18 +21,22 @@ const StudentHome = () => {
     const [hasMoreSkills, setHasMoreSkills] = useState(true);
     const [loadingSkills, setLoadingSkills] = useState(false);
 
+    // 1. Thêm work_days vào state filters
     const [filters, setFilters] = useState({
         keyword: "",
         category_id: "",
         skills: [],
-        salary_min: ""
+        salary_min: "",
+        work_days: ""
     });
 
+    // 2. Thêm work_days vào state query
     const [query, setQuery] = useState({
         keyword: "",
         category_id: "",
         skills: [],
-        salary_min: ""
+        salary_min: "",
+        work_days: ""
     });
 
     useEffect(() => {
@@ -98,6 +102,7 @@ const StudentHome = () => {
                 ...(query.keyword && { keyword: query.keyword }),
                 ...(query.category_id && { category_id: query.category_id }),
                 ...(query.salary_min && { salary_min: query.salary_min }),
+                ...(query.work_days && { work_days: query.work_days }),
                 ...(query.skills.length > 0 && { skills: query.skills })
             };
 
@@ -110,11 +115,8 @@ const StudentHome = () => {
             else
                 setJobs(prev => [...prev, ...newJobs]);
 
-            const currentPage =
-                res.data.meta?.current_page || page;
-
-            const lastPage =
-                res.data.meta?.last_page || 1;
+            const currentPage = res.data.meta?.current_page || page;
+            const lastPage = res.data.meta?.last_page || 1;
 
             setHasMore(currentPage < lastPage);
 
@@ -127,23 +129,17 @@ const StudentHome = () => {
 
     const bookmarkJob = async (jobId) => {
         try {
-            await authApis().post(
-                endpoints.bookmark(jobId)
-            );
+            await authApis().post(endpoints.bookmark(jobId));
 
             setJobs(current =>
                 current.map(j =>
                     j.id === jobId
-                        ? {
-                            ...j,
-                            bookmarked: true
-                        }
+                        ? { ...j, bookmarked: true }
                         : j
                 )
             );
 
             alert("Đã lưu việc làm");
-
         } catch (err) {
             console.error(err);
             alert("Không thể lưu việc làm");
@@ -165,6 +161,24 @@ const StudentHome = () => {
         setQuery(prev => ({
             ...prev,
             category_id: categoryId
+        }));
+    };
+
+    const handleWorkDaysChange = (e) => {
+        const workDays = e.target.value;
+
+        setFilters(prev => ({
+            ...prev,
+            work_days: workDays
+        }));
+
+        setJobs([]);
+        setHasMore(true);
+        setPage(1);
+
+        setQuery(prev => ({
+            ...prev,
+            work_days: workDays
         }));
     };
 
@@ -193,12 +207,14 @@ const StudentHome = () => {
         setQuery(filters);
     };
 
+    // 4. Cập nhật reset filter cho ngày làm việc
     const clearFilter = () => {
         const emptyFilters = {
             keyword: "",
             category_id: "",
             skills: [],
-            salary_min: ""
+            salary_min: "",
+            work_days: ""
         };
 
         setFilters(emptyFilters);
@@ -222,7 +238,7 @@ const StudentHome = () => {
                     <Form onSubmit={handleFilterSubmit}>
                         <Row className="g-3">
 
-                            <Col md={4}>
+                            <Col md={3}>
                                 <Form.Group>
                                     <Form.Label className="fw-semibold">
                                         Danh mục ngành nghề
@@ -232,10 +248,7 @@ const StudentHome = () => {
                                         value={filters.category_id}
                                         onChange={handleCategoryChange}
                                     >
-                                        <option value="">
-                                            -- Tất cả danh mục --
-                                        </option>
-
+                                        <option value="">-- Tất cả danh mục --</option>
                                         {categories.map(c => (
                                             <option key={c.id} value={c.id}>
                                                 {c.name}
@@ -245,7 +258,7 @@ const StudentHome = () => {
                                 </Form.Group>
                             </Col>
 
-                            <Col md={4}>
+                            <Col md={3}>
                                 <Form.Group>
                                     <Form.Label className="fw-semibold">
                                         Từ khóa tìm kiếm
@@ -264,7 +277,7 @@ const StudentHome = () => {
                                 </Form.Group>
                             </Col>
 
-                            <Col md={4}>
+                            <Col md={3}>
                                 <Form.Group>
                                     <Form.Label className="fw-semibold">
                                         Mức lương tối thiểu (VNĐ/giờ)
@@ -282,10 +295,31 @@ const StudentHome = () => {
                                                 }))
                                             }
                                         />
-                                        <InputGroup.Text>
-                                            VNĐ
-                                        </InputGroup.Text>
+                                        <InputGroup.Text>VNĐ</InputGroup.Text>
                                     </InputGroup>
+                                </Form.Group>
+                            </Col>
+
+                            {/* 5. Ô chọn lọc Ngày làm việc */}
+                            <Col md={3}>
+                                <Form.Group>
+                                    <Form.Label className="fw-semibold">
+                                        Ngày làm việc
+                                    </Form.Label>
+
+                                    <Form.Select
+                                        value={filters.work_days}
+                                        onChange={handleWorkDaysChange}
+                                    >
+                                        <option value="">-- Tất cả các ngày --</option>
+                                        <option value="Thứ 2">Thứ 2</option>
+                                        <option value="Thứ 3">Thứ 3</option>
+                                        <option value="Thứ 4">Thứ 4</option>
+                                        <option value="Thứ 5">Thứ 5</option>
+                                        <option value="Thứ 6">Thứ 6</option>
+                                        <option value="Thứ 7">Thứ 7</option>
+                                        <option value="Chủ nhật">Chủ nhật</option>
+                                    </Form.Select>
                                 </Form.Group>
                             </Col>
 
@@ -325,8 +359,7 @@ const StudentHome = () => {
                                         )}
 
                                         {skills.map(s => {
-                                            const selected =
-                                                filters.skills.includes(s.id);
+                                            const selected = filters.skills.includes(s.id);
 
                                             return (
                                                 <Badge
@@ -397,13 +430,10 @@ const StudentHome = () => {
             <Row>
                 {jobs.map(job => (
                     <Col md={6} lg={4} key={job.id} className="mb-4">
-
                         <Card className="h-100 shadow-sm">
-
                             <Card.Body className="d-flex flex-column">
 
                                 <div className="d-flex justify-content-between align-items-start mb-2">
-
                                     <Card.Title
                                         className="fw-bold mb-0 flex-grow-1 me-2"
                                         title={job.title}
@@ -411,57 +441,47 @@ const StudentHome = () => {
                                         {job.title}
                                     </Card.Title>
 
-                                    {
-                                        user?.role === "STUDENT" && (
-
-                                            <Button
-                                                size="sm"
-                                                variant={
-                                                    job.bookmarked
-                                                        ? "danger"
-                                                        : "outline-danger"
-                                                }
-                                                disabled={job.bookmarked}
-                                                onClick={() => bookmarkJob(job.id)}
-                                                className="flex-shrink-0"
-                                            >
-                                                {job.bookmarked ? "Đã lưu" : "Lưu"}
-                                            </Button>
-
-                                        )
-                                    }
-
+                                    {user?.role === "STUDENT" && (
+                                        <Button
+                                            size="sm"
+                                            variant={job.bookmarked ? "danger" : "outline-danger"}
+                                            disabled={job.bookmarked}
+                                            onClick={() => bookmarkJob(job.id)}
+                                            className="flex-shrink-0"
+                                        >
+                                            {job.bookmarked ? "Đã lưu" : "Lưu"}
+                                        </Button>
+                                    )}
                                 </div>
 
                                 <Card.Subtitle className="text-muted mb-2">
                                     {job.company?.name || "Công ty"}
                                 </Card.Subtitle>
 
-                                <Badge
-                                    bg="info"
-                                    className="text-dark mb-3"
-                                >
+                                <Badge bg="info" className="text-dark mb-3">
                                     {job.category?.name || "Khác"}
                                 </Badge>
 
                                 <div className="mt-auto">
-
                                     <div className="fw-bold text-success">
-                                        {Number(job.salary_min).toLocaleString()} -
-                                        {" "}
-                                        {Number(job.salary_max).toLocaleString()}
-                                        {" "}VNĐ/giờ
+                                        {Number(job.salary_min).toLocaleString()} - {" "}
+                                        {Number(job.salary_max).toLocaleString()} VNĐ/giờ
                                     </div>
 
                                     <div className="small text-muted mt-2">
                                         <b>Địa điểm:</b> {job.location}
                                     </div>
 
+                                    {/* Hiển thị ngày làm việc nếu có */}
+                                    {job.work_days && (
+                                        <div className="small text-muted">
+                                            <b>Ngày làm:</b> {job.work_days}
+                                        </div>
+                                    )}
+
                                     <div className="small text-muted">
                                         <b>Kinh nghiệm:</b>{" "}
-                                        {job.experience?.trim()
-                                            ? job.experience
-                                            : "Không yêu cầu"}
+                                        {job.experience?.trim() ? job.experience : "Không yêu cầu"}
                                     </div>
 
                                     <div className="small text-muted">
@@ -471,29 +491,20 @@ const StudentHome = () => {
 
                                     {job.skills?.length > 0 && (
                                         <div className="mt-3 border-top pt-2">
-
                                             <div className="d-flex flex-wrap gap-1">
-
                                                 {job.skills.map(skill => (
-                                                    <Badge
-                                                        key={skill.id}
-                                                        bg="secondary"
-                                                    >
+                                                    <Badge key={skill.id} bg="secondary">
                                                         {skill.name}
                                                     </Badge>
                                                 ))}
-
                                             </div>
-
                                         </div>
                                     )}
-
                                 </div>
 
                             </Card.Body>
 
                             <Card.Footer className="bg-white border-0">
-
                                 <Button
                                     as={Link}
                                     to={`/jobs/${job.id}`}
@@ -502,38 +513,28 @@ const StudentHome = () => {
                                 >
                                     Xem chi tiết
                                 </Button>
-
                             </Card.Footer>
-
                         </Card>
-
                     </Col>
                 ))}
             </Row>
 
             {hasMore && jobs.length > 0 && (
                 <div className="text-center mt-4">
-
                     <Button
                         variant="success"
                         onClick={loadMore}
                         disabled={loading}
                     >
-                        {loading
-                            ? (
-                                <>
-                                    <Spinner
-                                        size="sm"
-                                        animation="border"
-                                        className="me-2"
-                                    />
-                                    Đang tải...
-                                </>
-                            )
-                            : "Xem thêm..."
-                        }
+                        {loading ? (
+                            <>
+                                <Spinner size="sm" animation="border" className="me-2" />
+                                Đang tải...
+                            </>
+                        ) : (
+                            "Xem thêm..."
+                        )}
                     </Button>
-
                 </div>
             )}
 

@@ -7,21 +7,17 @@ import { Link, useSearchParams } from "react-router-dom";
 const EmployerJobs = () => {
     const [jobs, setJobs] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [meta, setMeta] = useState(null); // Lưu thông tin phân trang từ API
+    const [meta, setMeta] = useState(null);
     const [searchParams, setSearchParams] = useSearchParams();
 
-    // Lấy trang hiện tại từ URL query string (ví dụ: ?page=2), mặc định là 1
     const currentPage = parseInt(searchParams.get("page") || "1", 10);
 
     const loadJobs = async (page = 1) => {
         setLoading(true);
         try {
-            // Truyền page query param lên API
+            
             const res = await authApis().get(`${endpoints.myJobs}?page=${page}`);
             
-            // Laravel Resource Collection chuẩn khi dùng paginate() sẽ có dạng:
-            // res.data.data -> danh sách items
-            // res.data.meta -> thông tin phân trang (current_page, last_page, v.v.)
             setJobs(res.data.data);
             setMeta(res.data.meta);
         } catch (error) {
@@ -36,19 +32,16 @@ const EmployerJobs = () => {
 
         try {
             await authApis().delete(endpoints.deleteJob(id));
-            // Tải lại dữ liệu ở trang hiện tại sau khi xóa
             loadJobs(currentPage);
         } catch (error) {
             console.error("Lỗi khi xóa công việc:", error);
         }
     };
 
-    // Gọi lại API mỗi khi trang trên URL thay đổi
     useEffect(() => {
         loadJobs(currentPage);
     }, [currentPage]);
 
-    // Thay đổi trang trên URL query string
     const handlePageChange = (page) => {
         setSearchParams({ page });
     };

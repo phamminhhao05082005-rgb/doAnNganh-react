@@ -10,7 +10,6 @@ const JobForm = () => {
     const [skills, setSkills] = useState([]);
     const [errors, setErrors] = useState({});
 
-    // State phân trang Kỹ năng
     const [skillPage, setSkillPage] = useState(1);
     const [hasMoreSkills, setHasMoreSkills] = useState(true);
     const [loadingSkills, setLoadingSkills] = useState(false);
@@ -23,6 +22,7 @@ const JobForm = () => {
         salary_min: "",
         salary_max: "",
         location: "",
+        working_time: "",
         experience: "",
         deadline: "",
         status: true,
@@ -77,6 +77,7 @@ const JobForm = () => {
                 salary_min: job.salary_min !== undefined ? String(job.salary_min) : "",
                 salary_max: job.salary_max !== undefined ? String(job.salary_max) : "",
                 location: job.location || "",
+                working_time: job.working_time || "", 
                 experience: job.experience !== undefined ? String(job.experience) : "",
                 deadline: job.deadline || "",
                 status: job.status ?? true,
@@ -131,6 +132,8 @@ const JobForm = () => {
         if (!data.title.trim()) newErrors.title = "Vui lòng nhập tiêu đề";
         if (!data.category_id) newErrors.category_id = "Vui lòng chọn danh mục";
         if (!data.location.trim()) newErrors.location = "Vui lòng nhập địa điểm";
+        
+        if (!data.working_time.trim()) newErrors.working_time = "Vui lòng nhập thời gian làm việc";
 
         if (!String(data.experience).trim()) {
             newErrors.experience = "Vui lòng nhập số năm kinh nghiệm";
@@ -237,6 +240,20 @@ const JobForm = () => {
                         </Form.Control.Feedback>
                     </Form.Group>
 
+                    {/* FORM INPUT THỜI GIAN LÀM VIỆC */}
+                    <Form.Group className="mb-3">
+                        <Form.Label>Thời gian làm việc</Form.Label>
+                        <Form.Control
+                            value={data.working_time}
+                            isInvalid={!!errors.working_time}
+                            onChange={(e) => change("working_time", e.target.value)}
+                            placeholder="VD: Full-time, Part-time, Thứ 2 - Thứ 6..."
+                        />
+                        <Form.Control.Feedback type="invalid">
+                            {errors.working_time}
+                        </Form.Control.Feedback>
+                    </Form.Group>
+
                     <Form.Group className="mb-3">
                         <Form.Label>Kinh nghiệm (năm)</Form.Label>
                         <Form.Control
@@ -317,7 +334,6 @@ const JobForm = () => {
                         </Form.Control.Feedback>
                     </Form.Group>
 
-                    {/* Section Kỹ năng với nút Xem thêm */}
                     <Form.Group className="mb-3">
                         <Form.Label className="fw-semibold d-block">Kỹ năng</Form.Label>
                         <div className="d-flex flex-wrap gap-2 align-items-center">

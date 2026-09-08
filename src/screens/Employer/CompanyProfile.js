@@ -1,9 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import { useParams, Link } from "react-router-dom";
-import { 
-    Button, Card, Spinner, ListGroup, 
-    Modal, Form, Alert 
-} from "react-bootstrap";
+import { Button, Card, Spinner, ListGroup, Modal, Form, Alert, Row, Col } from "react-bootstrap";
 import { authApis, endpoints } from "../../configs/Apis";
 import { MyUserContext } from "../../configs/Contexts";
 
@@ -125,68 +122,123 @@ const CompanyProfile = () => {
 
     return (
         <div className="container mt-4 mb-5">
-            <Card className="mb-4 shadow-sm">
-                <Card.Header className="d-flex justify-content-between align-items-center bg-primary text-white">
-                    <h3 className="mb-0">Thông tin doanh nghiệp</h3>
+            <Card className="mb-4 shadow-sm border-0">
+                <Card.Header className="d-flex justify-content-between align-items-center bg-primary text-white py-3">
+                    <h4 className="mb-0 fw-bold">Hồ sơ doanh nghiệp</h4>
                     {isOwner && (
                         <Link to="/employer/company/edit" state={company}>
-                            <Button variant="light" size="sm">Chỉnh sửa</Button>
+                            <Button variant="light" size="sm" className="fw-bold text-primary">
+                                <i className="bi bi-pencil-square me-1"></i> Chỉnh sửa
+                            </Button>
                         </Link>
                     )}
                 </Card.Header>
 
-                <Card.Body>
-                    <p><b>Tên công ty:</b> {company.name}</p>
-                    <p><b>Người đại diện:</b> {company.owner?.full_name}</p>
-                    <p><b>Email:</b> {company.owner?.email}</p>
-                    <p><b>Điện thoại:</b> {company.owner?.phone}</p>
-                    <p><b>Website:</b> <a href={company.website} target="_blank" rel="noreferrer">{company.website}</a></p>
-                    <p><b>Địa chỉ:</b> {company.address}</p>
-                    <p><b>Mô tả:</b> {company.description}</p>
+                <Card.Body className="p-4">
+                    <Row className="align-items-center">
+                        <Col md={3} className="text-center mb-4 mb-md-0">
+                            {company.logo ? (
+                                <img 
+                                    src={company.logo} 
+                                    alt={`Logo ${company.name}`} 
+                                    className="img-thumbnail shadow-sm rounded"
+                                    style={{ width: "100%", maxWidth: "180px", aspectRatio: "1/1", objectFit: "contain" }}
+                                />
+                            ) : (
+                                <div 
+                                    className="bg-light d-flex align-items-center justify-content-center mx-auto img-thumbnail shadow-sm rounded" 
+                                    style={{ width: "100%", maxWidth: "180px", aspectRatio: "1/1" }}
+                                >
+                                    <span className="text-muted fw-semibold">Chưa có Logo</span>
+                                </div>
+                            )}
+                        </Col>
+                        
+                        <Col md={9}>
+                            <h3 className="text-primary mb-3 fw-bold">{company.name}</h3>
+                            <div className="text-secondary mb-2">
+                                <i className="bi bi-person-fill me-2 text-dark"></i>
+                                <strong>Người đại diện:</strong> {company.owner?.full_name}
+                            </div>
+                            <div className="text-secondary mb-2">
+                                <i className="bi bi-envelope-fill me-2 text-dark"></i>
+                                <strong>Email:</strong> {company.owner?.email}
+                            </div>
+                            <div className="text-secondary mb-2">
+                                <i className="bi bi-telephone-fill me-2 text-dark"></i>
+                                <strong>Điện thoại:</strong> {company.owner?.phone}
+                            </div>
+                            <div className="text-secondary mb-2">
+                                <i className="bi bi-globe me-2 text-dark"></i>
+                                <strong>Website:</strong> <a href={company.website} target="_blank" rel="noreferrer" className="text-decoration-none">{company.website}</a>
+                            </div>
+                            <div className="text-secondary mb-3">
+                                <i className="bi bi-geo-alt-fill me-2 text-dark"></i>
+                                <strong>Địa chỉ:</strong> {company.address}
+                            </div>
+                            
+                            {company.description && (
+                                <div className="p-3 bg-light rounded border">
+                                    <h6 className="fw-bold mb-2">Mô tả công ty:</h6>
+                                    <p className="mb-0 text-secondary" style={{ whiteSpace: "pre-line", fontSize: "0.95rem" }}>
+                                        {company.description}
+                                    </p>
+                                </div>
+                            )}
+                        </Col>
+                    </Row>
                 </Card.Body>
             </Card>
 
-            <Card className="shadow-sm">
-                <Card.Header className="d-flex justify-content-between align-items-center bg-light">
-                    <h4 className="mb-0">Đánh giá từ ứng viên ({reviews.length})</h4>
+            <Card className="shadow-sm border-0">
+                <Card.Header className="d-flex justify-content-between align-items-center bg-white border-bottom py-3">
+                    <h5 className="mb-0 fw-bold text-dark">
+                        Đánh giá từ ứng viên <span className="badge bg-secondary ms-2">{reviews.length}</span>
+                    </h5>
                     {user?.role === "STUDENT" && (
-                        <Button variant="success" onClick={() => handleOpenModal()}>
+                        <Button variant="success" size="sm" className="fw-bold" onClick={() => handleOpenModal()}>
                             + Viết đánh giá
                         </Button>
                     )}
                 </Card.Header>
 
-                <Card.Body>
+                <Card.Body className="p-0">
                     {reviews.length === 0 ? (
-                        <p className="text-muted text-center my-3">Chưa có đánh giá nào cho công ty này.</p>
+                        <div className="text-center py-5">
+                            <h6 className="text-muted mb-0">Chưa có đánh giá nào cho công ty này.</h6>
+                        </div>
                     ) : (
                         <ListGroup variant="flush">
                             {reviews.map((rev) => (
-                                <ListGroup.Item key={rev.id} className="py-3">
+                                <ListGroup.Item key={rev.id} className="p-4 border-bottom">
                                     <div className="d-flex justify-content-between align-items-start">
-                                        <div className="d-flex align-items-center mb-2">
+                                        <div className="d-flex mb-3">
                                             <img 
-                                                src={rev.user?.avatar || "https://via.placeholder.com/40"} 
+                                                src={rev.user?.avatar || "https://via.placeholder.com/50"} 
                                                 alt="avatar" 
-                                                className="rounded-circle me-2"
-                                                width="40" 
-                                                height="40" 
+                                                className="rounded-circle me-3 shadow-sm border"
+                                                width="50" 
+                                                height="50"
+                                                style={{ objectFit: "cover" }}
                                             />
                                             <div>
-                                                <strong className="d-block">{rev.user?.full_name || "Ẩn danh"}</strong>
-                                                <span className="text-warning me-2">{renderStars(rev.rating)}</span>
-                                                <small className="text-muted">
-                                                    {new Date(rev.created_at).toLocaleDateString("vi-VN")}
-                                                </small>
+                                                <h6 className="mb-1 fw-bold text-dark">{rev.user?.full_name || "Ẩn danh"}</h6>
+                                                <div className="d-flex align-items-center">
+                                                    <span className="text-warning me-2 fs-5" style={{ letterSpacing: "2px" }}>
+                                                        {renderStars(rev.rating)}
+                                                    </span>
+                                                    <small className="text-muted" style={{ fontSize: "0.85rem" }}>
+                                                        {new Date(rev.created_at).toLocaleDateString("vi-VN")}
+                                                    </small>
+                                                </div>
                                             </div>
                                         </div>
 
                                         {user && user.id === rev.user?.id && (
-                                            <div>
+                                            <div className="d-flex gap-2">
                                                 <Button 
-                                                    variant="outline-warning" 
+                                                    variant="outline-primary" 
                                                     size="sm"
-                                                    className="me-2"
                                                     onClick={() => handleOpenModal(rev)}
                                                 >
                                                     Sửa
@@ -202,9 +254,9 @@ const CompanyProfile = () => {
                                         )}
                                     </div>
 
-                                    <p className="mb-0 mt-2 text-secondary" style={{ whiteSpace: "pre-line" }}>
+                                    <div className="p-3 bg-light rounded text-dark" style={{ fontSize: "0.95rem", lineHeight: "1.6", whiteSpace: "pre-line" }}>
                                         {rev.comment}
-                                    </p>
+                                    </div>
                                 </ListGroup.Item>
                             ))}
                         </ListGroup>
@@ -212,48 +264,56 @@ const CompanyProfile = () => {
                 </Card.Body>
             </Card>
 
-            <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{editingReviewId ? "Chỉnh sửa đánh giá" : `Đánh giá ${company.name}`}</Modal.Title>
+            <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered backdrop="static">
+                <Modal.Header closeButton className="bg-light">
+                    <Modal.Title className="fs-5 fw-bold text-primary">
+                        {editingReviewId ? "Chỉnh sửa đánh giá" : `Đánh giá ${company.name}`}
+                    </Modal.Title>
                 </Modal.Header>
                 
                 <Form onSubmit={handleReviewSubmit}>
-                    <Modal.Body>
-                        {reviewError && <Alert variant="danger">{reviewError}</Alert>}
+                    <Modal.Body className="p-4">
+                        {reviewError && <Alert variant="danger" className="py-2">{reviewError}</Alert>}
 
-                        <Form.Group className="mb-3">
-                            <Form.Label><b>Số sao đánh giá:</b></Form.Label>
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-bold">Số sao đánh giá <span className="text-danger">*</span></Form.Label>
                             <Form.Select 
                                 value={rating} 
                                 onChange={(e) => setRating(e.target.value)}
+                                className="form-select-lg fs-6"
                             >
-                                <option value="5">5 Sao - Rất tốt</option>
-                                <option value="4">4 Sao - Tốt</option>
-                                <option value="3">3 Sao - Bình thường</option>
-                                <option value="2">2 Sao - Kém</option>
-                                <option value="1">1 Sao - Rất kém</option>
+                                <option value="5">⭐⭐⭐⭐⭐ (5/5) - Tuyệt vời</option>
+                                <option value="4">⭐⭐⭐⭐ (4/5) - Rất tốt</option>
+                                <option value="3">⭐⭐⭐ (3/5) - Bình thường</option>
+                                <option value="2">⭐⭐ (2/5) - Kém</option>
+                                <option value="1">⭐ (1/5) - Rất kém</option>
                             </Form.Select>
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label><b>Nội dung đánh giá:</b></Form.Label>
+                        <Form.Group className="mb-2">
+                            <Form.Label className="fw-bold">Nội dung đánh giá <span className="text-danger">*</span></Form.Label>
                             <Form.Control 
                                 as="textarea" 
                                 rows={4} 
-                                placeholder="Chia sẻ trải nghiệm ứng tuyển hoặc làm việc của bạn..."
+                                placeholder="Chia sẻ trải nghiệm của bạn về văn hóa công ty, quá trình phỏng vấn..."
                                 value={comment}
                                 onChange={(e) => setComment(e.target.value)}
                                 required
+                                className="p-3"
                             />
                         </Form.Group>
                     </Modal.Body>
 
-                    <Modal.Footer>
+                    <Modal.Footer className="bg-light">
                         <Button variant="secondary" onClick={() => setShowReviewModal(false)}>
-                            Hủy
+                            Hủy bỏ
                         </Button>
-                        <Button variant="primary" type="submit" disabled={submitting}>
-                            {submitting ? "Đang xử lý..." : editingReviewId ? "Cập nhật" : "Gửi đánh giá"}
+                        <Button variant="primary" type="submit" disabled={submitting} className="px-4">
+                            {submitting ? (
+                                <><Spinner as="span" animation="border" size="sm" role="status" aria-hidden="true" className="me-2" /> Đang xử lý...</>
+                            ) : (
+                                editingReviewId ? "Cập nhật đánh giá" : "Gửi đánh giá"
+                            )}
                         </Button>
                     </Modal.Footer>
                 </Form>

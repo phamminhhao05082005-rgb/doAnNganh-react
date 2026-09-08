@@ -15,7 +15,7 @@ const CompanyEdit = () => {
         website: company.website || "",
         address: company.address || "",
         description: company.description || "",
-        logo: company.logo || "",
+        logo: null,
     });
 
     const [errors, setErrors] = useState({});
@@ -53,10 +53,29 @@ const CompanyEdit = () => {
 
         if (!validate()) return;
 
+        const formData = new FormData();
+        formData.append("full_name", data.full_name);
+        formData.append("phone", data.phone);
+        formData.append("name", data.name);
+        formData.append("website", data.website);
+        formData.append("address", data.address);
+        formData.append("description", data.description);
+        
+        if (data.logo instanceof File) {
+            formData.append("logo", data.logo);
+        }
+        
+        formData.append("_method", "PUT");
+
         try {
-            await authApis().put(
+            await authApis().post(
                 endpoints.updateMyCompany,
-                data
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data"
+                    }
+                }
             );
 
             alert("Cập nhật thành công");
@@ -159,9 +178,9 @@ const CompanyEdit = () => {
                     <Form.Group className="mb-3">
                         <Form.Label>Logo</Form.Label>
                         <Form.Control
-                            type="text"
-                            value={data.logo}
-                            onChange={(e) => setData({ ...data, logo: e.target.value })}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setData({ ...data, logo: e.target.files[0] })}
                         />
                     </Form.Group>
 
