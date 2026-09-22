@@ -21,14 +21,14 @@ const StudentBookmarks = () => {
 
             const newJobs = res.data.data || [];
 
-            // Nếu trang 1 thì ghi đè, trang sau thì nối thêm vào danh sách hiện tại
+            
             if (pageNumber === 1) {
                 setJobs(newJobs);
             } else {
                 setJobs(prev => [...prev, ...newJobs]);
             }
 
-            // Kiểm tra phân trang từ meta do Laravel Resource trả về
+            
             const currentPage = res.data.meta?.current_page || pageNumber;
             const lastPage = res.data.meta?.last_page || 1;
             setHasMore(currentPage < lastPage);
@@ -41,19 +41,19 @@ const StudentBookmarks = () => {
         }
     };
 
-    // Tải dữ liệu mỗi khi số trang thay đổi
+    
     useEffect(() => {
         loadBookmarks(page);
     }, [page]);
 
-    // Xử lý khi nhấn nút "Xem thêm..."
+    
     const handleLoadMore = () => {
         if (!loading && hasMore) {
             setPage(prevPage => prevPage + 1);
         }
     };
 
-    // Bỏ lưu việc làm
+   
     const removeBookmark = async (jobId) => {
         if (!window.confirm("Bạn có chắc chắn muốn bỏ lưu việc làm này?")) return;
 
@@ -61,7 +61,7 @@ const StudentBookmarks = () => {
         try {
             await authApis().delete(endpoints.unBookmark(jobId));
 
-            // Cập nhật giao diện ngay lập tức
+            
             setJobs(prev => prev.filter(job => job.id !== jobId));
 
             toast.success("Đã bỏ lưu việc làm");
@@ -77,7 +77,7 @@ const StudentBookmarks = () => {
         <div className="container py-4">
             <h2 className="mb-4 text-primary font-weight-bold">Việc Làm Đã Lưu</h2>
 
-            {/* Trạng thái danh sách trống */}
+            
             {!loading && jobs.length === 0 && (
                 <Card className="text-center p-4 shadow-sm">
                     <Card.Body>
@@ -86,7 +86,7 @@ const StudentBookmarks = () => {
                 </Card>
             )}
 
-            {/* Danh sách bài tuyển dụng đã lưu */}
+            
             <Row>
                 {jobs.map(job => (
                     <Col md={6} lg={6} className="mb-4" key={job.id}>
@@ -116,7 +116,7 @@ const StudentBookmarks = () => {
                                     {job.deadline ? dayjs(job.deadline).format("DD/MM/YYYY") : "Chưa xác định"}
                                 </p>
 
-                                {/* Kỹ năng liên quan */}
+                                
                                 <div className="mb-3">
                                     {job.skills && job.skills.length > 0 ? (
                                         job.skills.map(skill => (
@@ -129,7 +129,7 @@ const StudentBookmarks = () => {
                                     )}
                                 </div>
 
-                                {/* Các hành động */}
+                                
                                 <div className="mt-auto pt-2 d-flex gap-2">
                                     <Link to={`/jobs/${job.id}`} className="flex-fill">
                                         <Button variant="primary" className="w-100">
@@ -155,7 +155,7 @@ const StudentBookmarks = () => {
                 ))}
             </Row>
 
-            {/* Vùng hiển thị Loading / Phân trang */}
+           
             <div className="text-center my-4">
                 {loading && (
                     <div className="py-2">

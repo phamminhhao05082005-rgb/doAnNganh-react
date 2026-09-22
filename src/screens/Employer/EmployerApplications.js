@@ -12,18 +12,20 @@ import {
 } from "react-bootstrap";
 import { authApis, endpoints } from "../../configs/Apis";
 import { toast } from "react-toastify";
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+
+window.Pusher = Pusher;
 
 const EmployerApplications = () => {
     const { jobId } = useParams();
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // State quản lý phân trang
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [perPage, setPerPage] = useState(10);
 
-    // State quản lý việc gọi API AI
     const [evaluating, setEvaluating] = useState(false);
     const [selectedAiData, setSelectedAiData] = useState(null);
     const [showAiModal, setShowAiModal] = useState(false);
@@ -35,9 +37,6 @@ const EmployerApplications = () => {
                 `${endpoints.employerApplications(jobId)}?page=${page}`
             );
 
-            // Tùy theo cấu trúc response pagination của Laravel API:
-            // - Nếu dạng API Resource mặc định: res.data.data là mảng, res.data.meta là thông tin phân trang
-            // - Nếu dạng Laravel Paginate trực tiếp: res.data.data.data là mảng, res.data.data.last_page là tổng số trang
             const items = res.data.data || [];
             const meta = res.data.meta || res.data;
 
@@ -60,44 +59,64 @@ const EmployerApplications = () => {
         loadApplications(currentPage);
     }, [jobId, currentPage]);
 
+    useEffect(() => {
+        const echo = new Echo({
+            broadcaster: 'reverb',
+            key: 'esr1fcutaadnmqb0dndo',
+            wsHost: '127.0.0.1',
+            wsPort: 8081,
+            wssPort: 8081,
+            forceTLS: false,
+            enabledTransports: ['ws', 'wss'],
+        });
+
+        const channel = echo.channel(`job.${jobId}`);
+
+        channel.listen('.ai.evaluated', (e) => {
+            toast.success("AI đã phân tích xong! Đang tự động cập nhật...");
+            setEvaluating(false);
+            loadApplications(currentPage);
+        });
+
+        return () => {
+            channel.stopListening('.ai.evaluated');
+            echo.leave(`job.${jobId}`);
+        };
+    }, [jobId, currentPage]);
+
     const handlePageChange = (pageNumber) => {
         if (pageNumber >= 1 && pageNumber <= totalPages && pageNumber !== currentPage) {
             setCurrentPage(pageNumber);
         }
     };
 
-    // Hàm kích hoạt AI Đánh giá CV
     const handleEvaluateAi = async (force = false) => {
         try {
             setEvaluating(true);
-            toast.info("AI đang phân tích danh sách CV, vui lòng chờ...");
+            toast.info("Đang gửi yêu cầu phân tích CV cho AI...");
 
-            await authApis().post(
+            const res = await authApis().post(
                 endpoints.evaluateJobCvs(jobId),
                 { force }
             );
 
-            toast.success("Đánh giá CV bằng AI hoàn tất!");
-            // Sau khi AI đánh giá xong, tải lại trang hiện tại để nhận dữ liệu mới
-            loadApplications(currentPage);
+            toast.success(res.data.message || "Hệ thống đang xử lý ngầm. Vui lòng tải lại trang sau ít phút để xem kết quả.");
+
         } catch (err) {
             console.error(err);
             toast.error(
-                err.response?.data?.message || "Lỗi trong quá trình AI đánh giá"
+                err.response?.data?.message || "Lỗi khi gửi yêu cầu đánh giá"
             );
-        } finally {
             setEvaluating(false);
         }
     };
 
-    // Hàm mở Popup xem chi tiết kết quả AI
     const handleOpenAiDetails = (app) => {
         if (!app.ai_evaluation) {
             toast.warning("Hồ sơ này chưa có kết quả đánh giá AI.");
             return;
         }
 
-        // Kiểm tra xem ai_evaluation có đang là chuỗi JSON hay không
         let parsedEvaluation = app.ai_evaluation;
         if (typeof app.ai_evaluation === "string") {
             try {
@@ -126,7 +145,6 @@ const EmployerApplications = () => {
         }
     };
 
-    // Render Badge điểm số AI
     const getScoreBadge = (score) => {
         if (score === null || score === undefined) {
             return <Badge bg="secondary">Chưa lọc</Badge>;
@@ -151,7 +169,6 @@ const EmployerApplications = () => {
                     <h4 className="mb-0">Danh sách ứng tuyển</h4>
 
                     <div className="d-flex gap-2">
-                        {/* NÚT LỌC BẰNG AI */}
                         <Button
                             variant="purple"
                             style={{ backgroundColor: "#6f42c1", color: "#fff" }}
@@ -161,7 +178,7 @@ const EmployerApplications = () => {
                             {evaluating ? (
                                 <>
                                     <Spinner size="sm" className="me-2" />
-                                    AI Đang Phân Tích...
+                                    Đang gửi yêu cầu...
                                 </>
                             ) : (
                                 "✨ Lọc CV bằng AI"
@@ -227,7 +244,6 @@ const EmployerApplications = () => {
                                             <td>{application.cv?.job_title || "—"}</td>
                                             <td>{application.cv?.experience_year ?? 0} năm</td>
 
-                                            {/* CỘT HIỂN THỊ ĐIỂM AI */}
                                             <td>
                                                 <div className="d-flex align-items-center gap-2">
                                                     {getScoreBadge(application.ai_score)}
@@ -256,7 +272,6 @@ const EmployerApplications = () => {
                                 </tbody>
                             </Table>
 
-                            {/* THANH PHÂN TRANG */}
                             {totalPages > 1 && (
                                 <div className="d-flex justify-content-center mt-4">
                                     <Pagination>
@@ -298,7 +313,6 @@ const EmployerApplications = () => {
                 </Card.Body>
             </Card>
 
-            {/* POPUP KHUNG HIỂN THỊ KẾT QUẢ AI CHI TIẾT */}
             <Modal show={showAiModal} onHide={() => setShowAiModal(false)} size="lg" centered>
                 <Modal.Header closeButton className="bg-light">
                     <Modal.Title className="h5">
@@ -308,7 +322,6 @@ const EmployerApplications = () => {
                 <Modal.Body>
                     {selectedAiData && (
                         <div>
-                            {/* Thanh điểm số */}
                             <div className="mb-4 text-center">
                                 <h6 className="mb-1 fw-bold">Mức độ phù hợp công việc</h6>
                                 <div className="display-6 fw-bold text-primary mb-2">
@@ -321,7 +334,6 @@ const EmployerApplications = () => {
                                 />
                             </div>
 
-                            {/* Tóm tắt */}
                             <div className="p-3 bg-light rounded mb-3">
                                 <h6>📌 Nhận xét chung:</h6>
                                 <p className="mb-0 text-dark">{selectedAiData.evaluation?.summary}</p>

@@ -202,13 +202,7 @@ const CVTemplate4 = ({ cv, onSave, editable = true }) => {
                                                     onChange={(e) => change("job_title", e.target.value)}
                                                 />
                                             </Form.Group>
-                                            <Form.Group className="mb-2">
-                                                <Form.Control
-                                                    placeholder="URL Avatar"
-                                                    value={form.avatar || ""}
-                                                    onChange={(e) => change("avatar", e.target.value)}
-                                                />
-                                            </Form.Group>
+                                            
                                         </Col>
                                         <Col md={6}>
                                             <Form.Group className="mb-2">

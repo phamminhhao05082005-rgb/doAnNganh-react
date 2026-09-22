@@ -21,14 +21,14 @@ const StudentApplications = () => {
 
             const newApps = res.data.data || [];
 
-            // Nếu trang 1 thì ghi đè, trang sau thì nối thêm vào danh sách cũ
+            
             if (pageNumber === 1) {
                 setApplications(newApps);
             } else {
                 setApplications(prev => [...prev, ...newApps]);
             }
 
-            // Kiểm tra phân trang dựa trên meta do Laravel Resource trả về
+            
             const currentPage = res.data.meta?.current_page || pageNumber;
             const lastPage = res.data.meta?.last_page || 1;
             setHasMore(currentPage < lastPage);
@@ -45,14 +45,14 @@ const StudentApplications = () => {
         loadApplications(page);
     }, [page]);
 
-    // Xử lý khi bấm nút "Xem thêm..."
+    
     const handleLoadMore = () => {
         if (!loading && hasMore) {
             setPage(prevPage => prevPage + 1);
         }
     };
 
-    // Hủy ứng tuyển
+    
     const removeApplication = async (id) => {
         if (!window.confirm("Bạn có chắc muốn hủy ứng tuyển?")) return;
 
@@ -62,7 +62,7 @@ const StudentApplications = () => {
 
             toast.success("Đã hủy ứng tuyển thành công");
 
-            // Cập nhật lại UI trực tiếp
+            
             setApplications(prev => prev.filter(app => app.id !== id));
 
         } catch (err) {
@@ -79,7 +79,7 @@ const StudentApplications = () => {
         switch (status) {
             case "PENDING":
                 return <Badge bg="warning" text="dark">Chờ duyệt</Badge>;
-            case "APPROVED":
+            case "ACCEPTED":
                 return <Badge bg="success">Đã duyệt</Badge>;
             case "REJECTED":
                 return <Badge bg="danger">Từ chối</Badge>;

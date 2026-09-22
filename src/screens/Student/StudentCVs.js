@@ -21,14 +21,14 @@ const StudentCVs = () => {
 
             const newCVs = res.data.data || [];
 
-            // Trang 1 ghi đè, các trang tiếp theo nối nối vào danh sách cũ
+           
             if (pageNumber === 1) {
                 setCVs(newCVs);
             } else {
                 setCVs(prev => [...prev, ...newCVs]);
             }
 
-            // Kiểm tra phân trang dựa trên meta từ Laravel
+            
             const currentPage = res.data.meta?.current_page || pageNumber;
             const lastPage = res.data.meta?.last_page || 1;
             setHasMore(currentPage < lastPage);
@@ -45,7 +45,7 @@ const StudentCVs = () => {
         loadCVs(page);
     }, [page]);
 
-    // Xử lý nút Xem thêm
+    
     const handleLoadMore = () => {
         if (!loading && hasMore) {
             setPage(prevPage => prevPage + 1);
@@ -59,7 +59,7 @@ const StudentCVs = () => {
         try {
             await authApis().delete(endpoints.cv(id));
             
-            // Xóa trực tiếp khỏi state UI
+            
             setCVs(prev => prev.filter(cv => cv.id !== id));
         } catch (err) {
             console.error(err);

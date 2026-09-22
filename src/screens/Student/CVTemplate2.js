@@ -228,17 +228,7 @@ const CVTemplate2 = ({
                                                 />
                                             </Form.Group>
                                         </Col>
-                                        <Col md={4}>
-                                            <Form.Group className="mb-2">
-                                                <Form.Label className="small mb-1">URL Avatar</Form.Label>
-                                                <Form.Control
-                                                    size="sm"
-                                                    placeholder="URL Avatar"
-                                                    value={form.avatar || ""}
-                                                    onChange={(e) => change("avatar", e.target.value)}
-                                                />
-                                            </Form.Group>
-                                        </Col>
+                                        
                                         <Col md={4}>
                                             <Form.Group className="mb-2">
                                                 <Form.Label className="small mb-1">Mức lương mong muốn</Form.Label>

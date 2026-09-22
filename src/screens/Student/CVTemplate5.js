@@ -437,13 +437,7 @@ const CVTemplate5 = ({ cv, onSave, editable = true }) => {
                                                 onChange={(e) => change("phone", e.target.value)}
                                             />
                                         </Form.Group>
-                                        <Form.Group className="mb-2">
-                                            <Form.Label>URL Avatar</Form.Label>
-                                            <Form.Control
-                                                value={form.avatar || ""}
-                                                onChange={(e) => change("avatar", e.target.value)}
-                                            />
-                                        </Form.Group>
+                                        
                                         <Form.Group className="mb-2">
                                             <Form.Label>Lương mong muốn</Form.Label>
                                             <Form.Control

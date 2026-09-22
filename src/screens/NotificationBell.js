@@ -26,7 +26,7 @@ const NotificationBell = () => {
     };
 
     const handleNotificationClick = async (notification) => {
-        // 1. Cập nhật UI tạm thời
+        
         if (!notification.is_read) {
             setNotifications((prev) =>
                 prev.map((n) =>
@@ -35,7 +35,7 @@ const NotificationBell = () => {
             );
             setUnreadCount((prev) => Math.max(0, prev - 1));
 
-            // 2. Chờ API ghi nhận xuống Database thành công
+            
             try {
                 await authApis().put(endpoints.markNotificationRead(notification.id));
             } catch (err) {
@@ -43,7 +43,7 @@ const NotificationBell = () => {
             }
         }
 
-        // 3. Sau khi cập nhật DB xong mới điều hướng trang
+        
         const jobId = notification.job_id || notification.job?.id;
         if (jobId) {
             navigate(`/jobs/${jobId}`);

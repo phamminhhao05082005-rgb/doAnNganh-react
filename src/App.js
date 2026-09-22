@@ -28,6 +28,8 @@ import StudentCVs from './screens/Student/StudentCVs';
 import CVDetail from './screens/Student/CVDetail';
 import StudentApplications from './screens/Student/StudentApplications';
 import EmployerApplications from './screens/Employer/EmployerApplications';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 function App() {
@@ -42,6 +44,7 @@ function App() {
     <MyUserContext.Provider value={[user, dispatch]}>
 
       <BrowserRouter>
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
 
         <Header />
 

@@ -226,15 +226,7 @@ const CVTemplate3 = ({ cv, onSave, editable = true }) => {
                                                 />
                                             </Form.Group>
                                         </Col>
-                                        <Col md={4}>
-                                            <Form.Group className="mb-2">
-                                                <Form.Label className="small text-light">URL Avatar</Form.Label>
-                                                <Form.Control
-                                                    value={form.avatar || ""}
-                                                    onChange={(e) => change("avatar", e.target.value)}
-                                                />
-                                            </Form.Group>
-                                        </Col>
+                                        
                                         <Col md={4}>
                                             <Form.Group className="mb-2">
                                                 <Form.Label className="small text-light">Mức lương mong muốn</Form.Label>

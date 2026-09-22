@@ -15,9 +15,7 @@ const EmployerJobs = () => {
     const loadJobs = async (page = 1) => {
         setLoading(true);
         try {
-            
             const res = await authApis().get(`${endpoints.myJobs}?page=${page}`);
-            
             setJobs(res.data.data);
             setMeta(res.data.meta);
         } catch (error) {
@@ -62,16 +60,16 @@ const EmployerJobs = () => {
                     </div>
                 ) : (
                     <>
-                        <Table striped bordered hover responsive>
+                        <Table striped bordered hover responsive className="align-middle">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th style={{ width: "60px" }}>ID</th>
                                     <th>Tiêu đề</th>
-                                    <th>Địa điểm</th>
-                                    <th>Lương theo giờ</th>
-                                    <th>Hạn</th>
-                                    <th>Trạng thái</th>
-                                    <th width="230">Thao tác</th>
+                                    <th style={{ minWidth: "150px", maxWidth: "220px" }}>Địa điểm</th>
+                                    <th style={{ whiteSpace: "nowrap" }}>Lương theo giờ</th>
+                                    <th style={{ width: "110px" }}>Hạn</th>
+                                    <th style={{ width: "110px" }}>Trạng thái</th>
+                                    <th style={{ width: "160px", whiteSpace: "nowrap" }} className="text-center">Thao tác</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -86,10 +84,16 @@ const EmployerJobs = () => {
                                         <tr key={job.id}>
                                             <td>{job.id}</td>
                                             <td>{job.title}</td>
-                                            <td>{job.location}</td>
-                                            <td>
-                                                {job.salary_min?.toLocaleString()}đ -{" "}
-                                                {job.salary_max?.toLocaleString()}đ
+                                            <td style={{ 
+                                                maxWidth: "220px", 
+                                                overflow: "hidden", 
+                                                textOverflow: "ellipsis", 
+                                                whiteSpace: "nowrap" 
+                                            }} title={job.location}>
+                                                {job.location}
+                                            </td>
+                                            <td style={{ whiteSpace: "nowrap" }}>
+                                                {job.salary_min?.toLocaleString()}đ - {job.salary_max?.toLocaleString()}đ
                                             </td>
                                             <td>
                                                 {dayjs(job.deadline).format("DD/MM/YYYY")}
@@ -105,20 +109,21 @@ const EmployerJobs = () => {
                                                     </span>
                                                 )}
                                             </td>
-                                            <td>
+                                            <td className="text-center" style={{ whiteSpace: "nowrap" }}>
                                                 <Link to={`/jobs/${job.id}`}>
-                                                    <Button size="sm" variant="info">
+                                                    <Button size="sm" variant="info" className="me-1 px-2 py-1">
                                                         Xem
                                                     </Button>
-                                                </Link>{" "}
+                                                </Link>
                                                 <Link to={`/employer/jobs/${job.id}/edit`}>
-                                                    <Button size="sm" variant="warning">
+                                                    <Button size="sm" variant="warning" className="me-1 px-2 py-1">
                                                         Sửa
                                                     </Button>
-                                                </Link>{" "}
+                                                </Link>
                                                 <Button
                                                     size="sm"
                                                     variant="danger"
+                                                    className="px-2 py-1"
                                                     onClick={() => deleteJob(job.id)}
                                                 >
                                                     Xóa

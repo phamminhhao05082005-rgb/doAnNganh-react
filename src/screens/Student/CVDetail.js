@@ -21,12 +21,10 @@ const CVDetail = () => {
     const isEmployer = !!applicationId;
     const editable = !isEmployer;
 
-    // Helper kiểm tra chính xác dữ liệu trả về là Application
     const isApplicationObject = (data) => {
         return Boolean(data && (data.cv || data.job || data.job_id || data.student_id));
     };
 
-    // 1. Tải CV dành cho Student
     const loadStudentCV = async (showLoading = true) => {
         if (showLoading) setLoading(true);
         try {
@@ -40,7 +38,6 @@ const CVDetail = () => {
         }
     };
 
-    // 2. Tải Application (cho Employer) & Fetch chi tiết CV
     const loadEmployerApplication = async () => {
         try {
             setLoading(true);
@@ -57,7 +54,6 @@ const CVDetail = () => {
                 return;
             }
 
-            // Phân biệt chính xác Application vs CV
             if (isApplicationObject(resData)) {
                 const appStatus = String(resData.status || "PENDING").toUpperCase();
                 setApplication({
@@ -68,7 +64,6 @@ const CVDetail = () => {
                 const targetCv = resData.cv || resData;
                 const cvId = targetCv?.id || id;
 
-                // Tải bổ sung chi tiết Educations/Experiences nếu đối tượng CV thiếu thông tin này
                 if (cvId && targetCv && !targetCv.educations) {
                     try {
                         const cvRes = await authApis().get(endpoints.cv(cvId));
@@ -101,7 +96,6 @@ const CVDetail = () => {
         }
     }, [id, applicationId]);
 
-    // 3. Cập nhật CV (Tối ưu hiệu năng bằng Promise.all)
     const updateCV = async (data) => {
         if (!editable) return;
 
@@ -114,12 +108,10 @@ const CVDetail = () => {
                 ...cvData
             } = data;
 
-            // Cập nhật thông tin chung CV
             await authApis().put(endpoints.cv(id), cvData);
 
             const requests = [];
 
-            // Xử lý Học vấn (Educations)
             for (const edu of educations || []) {
                 if (edu.id) {
                     requests.push(authApis().put(endpoints.cvEducation(id, edu.id), edu));
@@ -132,7 +124,7 @@ const CVDetail = () => {
                 requests.push(authApis().delete(endpoints.cvEducation(id, eduId)));
             }
 
-            // Xử lý Kinh nghiệm (Experiences)
+            
             for (const exp of experiences || []) {
                 if (exp.id) {
                     requests.push(authApis().put(endpoints.cvExperience(id, exp.id), exp));
@@ -145,7 +137,7 @@ const CVDetail = () => {
                 requests.push(authApis().delete(endpoints.cvExperience(id, expId)));
             }
 
-            // Gửi toàn bộ API đồng thời
+            
             await Promise.all(requests);
 
             await loadStudentCV(false);
@@ -156,7 +148,7 @@ const CVDetail = () => {
         }
     };
 
-    // 4. Duyệt / Từ chối application
+    
     const updateApplicationStatus = async (status) => {
         if (!application?.id) return;
 
@@ -187,7 +179,7 @@ const CVDetail = () => {
         }
     };
 
-    // Helper hiển thị Badge trạng thái an toàn
+    
     const renderStatusBadge = (status) => {
         const uppercaseStatus = String(status || "").toUpperCase();
         if (["APPROVED", "ACCEPTED"].includes(uppercaseStatus)) {

@@ -21,7 +21,7 @@ const StudentHome = () => {
     const [hasMoreSkills, setHasMoreSkills] = useState(true);
     const [loadingSkills, setLoadingSkills] = useState(false);
 
-    // 1. Thêm work_days vào state filters
+    
     const [filters, setFilters] = useState({
         keyword: "",
         category_id: "",
@@ -30,7 +30,7 @@ const StudentHome = () => {
         work_days: ""
     });
 
-    // 2. Thêm work_days vào state query
+    
     const [query, setQuery] = useState({
         keyword: "",
         category_id: "",
@@ -207,7 +207,7 @@ const StudentHome = () => {
         setQuery(filters);
     };
 
-    // 4. Cập nhật reset filter cho ngày làm việc
+
     const clearFilter = () => {
         const emptyFilters = {
             keyword: "",
@@ -300,7 +300,7 @@ const StudentHome = () => {
                                 </Form.Group>
                             </Col>
 
-                            {/* 5. Ô chọn lọc Ngày làm việc */}
+                            
                             <Col md={3}>
                                 <Form.Group>
                                     <Form.Label className="fw-semibold">
