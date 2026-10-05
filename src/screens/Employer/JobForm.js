@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Form, Button, Card, Spinner, Badge } from "react-bootstrap";
+import { Form, Button, Card, Spinner, Badge, Row, Col, Container } from "react-bootstrap";
 import { useNavigate, useParams } from "react-router-dom";
 import { authApis, endpoints } from "../../configs/Apis";
 
@@ -188,199 +188,275 @@ const JobForm = () => {
     };
 
     return (
-        <Card className="mt-4 shadow-sm">
-            <Card.Header>
-                <h3>
-                    {id ? "Cập nhật tin tuyển dụng" : "Đăng tin tuyển dụng"}
-                </h3>
-            </Card.Header>
+        <Container className="py-4">
+            <Card className="shadow-sm border-0 rounded-4">
+                <Card.Header className="bg-white border-bottom-0 pt-4 pb-2 px-4">
+                    <h3 className="fw-bold text-primary mb-0">
+                        {id ? "Cập nhật tin tuyển dụng" : "Đăng tin tuyển dụng mới"}
+                    </h3>
+                    <p className="text-muted mt-2 mb-0">Điền đầy đủ thông tin bên dưới để tiếp cận ứng viên tiềm năng.</p>
+                </Card.Header>
 
-            <Card.Body>
-                <Form onSubmit={save}>
-                    <Form.Group className="mb-3">
-                        <Form.Label>Tiêu đề</Form.Label>
-                        <Form.Control
-                            value={data.title}
-                            isInvalid={!!errors.title}
-                            onChange={(e) => change("title", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.title}
-                        </Form.Control.Feedback>
-                    </Form.Group>
+                <Card.Body className="p-4">
+                    <Form onSubmit={save}>
+                        <h5 className="fw-bold mb-4 pb-2 border-bottom text-secondary">Thông tin chung</h5>
+                        
+                        <Row>
+                            <Col md={12}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Tiêu đề công việc <span className="text-danger">*</span></Form.Label>
+                                    <Form.Control
+                                        size="lg"
+                                        className="rounded-3"
+                                        placeholder="VD: Lập trình viên Frontend (ReactJS)"
+                                        value={data.title}
+                                        isInvalid={!!errors.title}
+                                        onChange={(e) => change("title", e.target.value)}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.title}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
 
-                    <Form.Group className="mb-3">
-                        <Form.Label>Danh mục</Form.Label>
-                        <Form.Select
-                            value={data.category_id}
-                            isInvalid={!!errors.category_id}
-                            onChange={(e) => change("category_id", e.target.value)}
-                        >
-                            <option value="">Chọn danh mục</option>
-                            {categories.map(c => (
-                                <option key={c.id} value={c.id}>
-                                    {c.name}
-                                </option>
-                            ))}
-                        </Form.Select>
-                        <Form.Control.Feedback type="invalid">
-                            {errors.category_id}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Địa điểm</Form.Label>
-                        <Form.Control
-                            value={data.location}
-                            isInvalid={!!errors.location}
-                            onChange={(e) => change("location", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.location}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    {/* FORM INPUT THỜI GIAN LÀM VIỆC */}
-                    <Form.Group className="mb-3">
-                        <Form.Label>Thời gian làm việc</Form.Label>
-                        <Form.Control
-                            value={data.working_time}
-                            isInvalid={!!errors.working_time}
-                            onChange={(e) => change("working_time", e.target.value)}
-                            placeholder="VD: Full-time, Part-time, Thứ 2 - Thứ 6..."
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.working_time}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Kinh nghiệm (năm)</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={data.experience}
-                            isInvalid={!!errors.experience}
-                            onChange={(e) => handleNumericChange("experience", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.experience}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Lương tối thiểu theo giờ</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={data.salary_min}
-                            isInvalid={!!errors.salary_min}
-                            onChange={(e) => handleNumericChange("salary_min", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.salary_min}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Lương tối đa theo giờ</Form.Label>
-                        <Form.Control
-                            type="text"
-                            value={data.salary_max}
-                            isInvalid={!!errors.salary_max}
-                            onChange={(e) => handleNumericChange("salary_max", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.salary_max}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Hạn nộp</Form.Label>
-                        <Form.Control
-                            type="date"
-                            value={data.deadline}
-                            isInvalid={!!errors.deadline}
-                            onChange={(e) => change("deadline", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.deadline}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Mô tả</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={5}
-                            value={data.description}
-                            isInvalid={!!errors.description}
-                            onChange={(e) => change("description", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.description}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label>Yêu cầu</Form.Label>
-                        <Form.Control
-                            as="textarea"
-                            rows={5}
-                            value={data.requirement}
-                            isInvalid={!!errors.requirement}
-                            onChange={(e) => change("requirement", e.target.value)}
-                        />
-                        <Form.Control.Feedback type="invalid">
-                            {errors.requirement}
-                        </Form.Control.Feedback>
-                    </Form.Group>
-
-                    <Form.Group className="mb-3">
-                        <Form.Label className="fw-semibold d-block">Kỹ năng</Form.Label>
-                        <div className="d-flex flex-wrap gap-2 align-items-center">
-                            {skills.map(skill => {
-                                const selected = data.skills.includes(skill.id);
-                                return (
-                                    <Badge
-                                        key={skill.id}
-                                        bg={selected ? "primary" : "light"}
-                                        text={selected ? "white" : "dark"}
-                                        className="border p-2"
-                                        style={{ cursor: "pointer", userSelect: "none" }}
-                                        onClick={() => toggleSkill(skill.id)}
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Danh mục ngành nghề <span className="text-danger">*</span></Form.Label>
+                                    <Form.Select
+                                        className="rounded-3"
+                                        value={data.category_id}
+                                        isInvalid={!!errors.category_id}
+                                        onChange={(e) => change("category_id", e.target.value)}
                                     >
-                                        {selected ? "✓ " : "+ "}
-                                        {skill.name}
-                                    </Badge>
-                                );
-                            })}
+                                        <option value="">-- Chọn danh mục phù hợp --</option>
+                                        {categories.map(c => (
+                                            <option key={c.id} value={c.id}>{c.name}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.category_id}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
 
-                            {hasMoreSkills && (
-                                <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={loadMoreSkills}
-                                    disabled={loadingSkills}
-                                    className="rounded-pill px-3"
-                                >
-                                    {loadingSkills ? (
-                                        <Spinner size="sm" animation="border" />
-                                    ) : (
-                                        "+ Xem thêm kỹ năng"
-                                    )}
-                                </Button>
-                            )}
-                        </div>
-                        {errors.skills && (
-                            <div className="text-danger fs-6 mt-1">
-                                {errors.skills}
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Địa điểm làm việc <span className="text-danger">*</span></Form.Label>
+                                    <Form.Control
+                                        className="rounded-3"
+                                        placeholder="VD: Quận 1, TP. HCM"
+                                        value={data.location}
+                                        isInvalid={!!errors.location}
+                                        onChange={(e) => change("location", e.target.value)}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.location}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Thời gian làm việc <span className="text-danger">*</span></Form.Label>
+                                    <Form.Control
+                                        className="rounded-3"
+                                        value={data.working_time}
+                                        isInvalid={!!errors.working_time}
+                                        onChange={(e) => change("working_time", e.target.value)}
+                                        placeholder="VD: Full-time, Thứ 2 - Thứ 6..."
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.working_time}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Kinh nghiệm yêu cầu (năm) <span className="text-danger">*</span></Form.Label>
+                                    <Form.Control
+                                        className="rounded-3"
+                                        type="text"
+                                        placeholder="VD: 1, 2, 0 (nếu không yêu cầu)"
+                                        value={data.experience}
+                                        isInvalid={!!errors.experience}
+                                        onChange={(e) => handleNumericChange("experience", e.target.value)}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.experience}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Hạn nhận hồ sơ <span className="text-danger">*</span></Form.Label>
+                                    <Form.Control
+                                        className="rounded-3"
+                                        type="date"
+                                        value={data.deadline}
+                                        isInvalid={!!errors.deadline}
+                                        onChange={(e) => change("deadline", e.target.value)}
+                                    />
+                                    <Form.Control.Feedback type="invalid">
+                                        {errors.deadline}
+                                    </Form.Control.Feedback>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <h5 className="fw-bold mt-2 mb-4 pb-2 border-bottom text-secondary">Mức lương dự kiến</h5>
+                        
+                        <Row>
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Lương tối thiểu (VNĐ) <span className="text-danger">*</span></Form.Label>
+                                    <div className="input-group">
+                                        <Form.Control
+                                            className="rounded-start-3"
+                                            type="text"
+                                            placeholder="VD: 10000000"
+                                            value={data.salary_min}
+                                            isInvalid={!!errors.salary_min}
+                                            onChange={(e) => handleNumericChange("salary_min", e.target.value)}
+                                        />
+                                        <span className="input-group-text rounded-end-3 bg-light">VNĐ</span>
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.salary_min}
+                                        </Form.Control.Feedback>
+                                    </div>
+                                </Form.Group>
+                            </Col>
+
+                            <Col md={6}>
+                                <Form.Group className="mb-4">
+                                    <Form.Label className="fw-semibold">Lương tối đa (VNĐ) <span className="text-danger">*</span></Form.Label>
+                                    <div className="input-group">
+                                        <Form.Control
+                                            className="rounded-start-3"
+                                            type="text"
+                                            placeholder="VD: 20000000"
+                                            value={data.salary_max}
+                                            isInvalid={!!errors.salary_max}
+                                            onChange={(e) => handleNumericChange("salary_max", e.target.value)}
+                                        />
+                                        <span className="input-group-text rounded-end-3 bg-light">VNĐ</span>
+                                        <Form.Control.Feedback type="invalid">
+                                            {errors.salary_max}
+                                        </Form.Control.Feedback>
+                                    </div>
+                                </Form.Group>
+                            </Col>
+                        </Row>
+
+                        <h5 className="fw-bold mt-2 mb-4 pb-2 border-bottom text-secondary">Chi tiết công việc</h5>
+
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-semibold">Mô tả công việc <span className="text-danger">*</span></Form.Label>
+                            <Form.Control
+                                className="rounded-3"
+                                as="textarea"
+                                rows={6}
+                                placeholder="Mô tả chi tiết các nhiệm vụ, trách nhiệm mà ứng viên sẽ đảm nhận..."
+                                value={data.description}
+                                isInvalid={!!errors.description}
+                                onChange={(e) => change("description", e.target.value)}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.description}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-4">
+                            <Form.Label className="fw-semibold">Yêu cầu ứng viên <span className="text-danger">*</span></Form.Label>
+                            <Form.Control
+                                className="rounded-3"
+                                as="textarea"
+                                rows={6}
+                                placeholder="Các kỹ năng, bằng cấp, hoặc phẩm chất cần thiết cho vị trí này..."
+                                value={data.requirement}
+                                isInvalid={!!errors.requirement}
+                                onChange={(e) => change("requirement", e.target.value)}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.requirement}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-5 bg-light p-4 rounded-4">
+                            <Form.Label className="fw-bold mb-3 d-block text-dark">
+                                Kỹ năng chuyên môn yêu cầu <span className="text-danger">*</span>
+                                <small className="text-muted fw-normal ms-2 d-block mt-1">
+                                    Chọn các thẻ kỹ năng để ứng viên dễ dàng tìm thấy tin tuyển dụng của bạn.
+                                </small>
+                            </Form.Label>
+                            
+                            <div className="d-flex flex-wrap gap-2 align-items-center">
+                                {skills.map(skill => {
+                                    const selected = data.skills.includes(skill.id);
+                                    return (
+                                        <Badge
+                                            key={skill.id}
+                                            bg={selected ? "primary" : "white"}
+                                            text={selected ? "white" : "dark"}
+                                            className={`border p-2 fs-6 rounded-pill ${selected ? 'border-primary shadow-sm' : 'border-secondary-subtle'}`}
+                                            style={{ cursor: "pointer", userSelect: "none", transition: "all 0.2s" }}
+                                            onClick={() => toggleSkill(skill.id)}
+                                        >
+                                            {selected ? "✓ " : "+ "}
+                                            {skill.name}
+                                        </Badge>
+                                    );
+                                })}
+
+                                {hasMoreSkills && (
+                                    <Button
+                                        variant="outline-primary"
+                                        size="sm"
+                                        onClick={loadMoreSkills}
+                                        disabled={loadingSkills}
+                                        className="rounded-pill px-3 py-1 ms-2"
+                                    >
+                                        {loadingSkills ? (
+                                            <>
+                                                <Spinner size="sm" animation="border" className="me-2" />
+                                                Đang tải...
+                                            </>
+                                        ) : (
+                                            "+ Tải thêm kỹ năng"
+                                        )}
+                                    </Button>
+                                )}
                             </div>
-                        )}
-                    </Form.Group>
+                            {errors.skills && (
+                                <div className="text-danger fs-6 mt-3 fw-medium">
+                                    <i className="bi bi-exclamation-circle me-1"></i> {errors.skills}
+                                </div>
+                            )}
+                        </Form.Group>
 
-                    <Button type="submit" variant="primary">Lưu</Button>
-                </Form>
-            </Card.Body>
-        </Card>
+                        <div className="d-flex justify-content-end gap-3 pt-3 border-top">
+                            <Button 
+                                type="button" 
+                                variant="light" 
+                                className="px-4 rounded-pill fw-medium"
+                                onClick={() => nav("/employer/jobs")}
+                            >
+                                Hủy bỏ
+                            </Button>
+                            <Button 
+                                type="submit" 
+                                variant="primary" 
+                                size="lg" 
+                                className="px-5 rounded-pill fw-bold shadow-sm"
+                            >
+                                {id ? "Lưu thay đổi" : "Đăng tin ngay"}
+                            </Button>
+                        </div>
+                    </Form>
+                </Card.Body>
+            </Card>
+        </Container>
     );
 };
 
